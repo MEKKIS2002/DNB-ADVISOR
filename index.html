@@ -495,6 +495,19 @@ footer{text-align:center;padding:40px 0 20px;font-size:11px;color:var(--ink-fain
   </div>
 
   <div class="config-section">
+    <h3>Kontosaldoer</h3>
+    <p style="font-size:12px;color:var(--ink-muted);margin-bottom:12px">DNB CSV inneholder ikke saldo — oppdater disse når du laster opp nye filer.</p>
+    <div class="grid-2">
+      <div class="form-group"><label>Jobbkonto (kr)</label><input type="number" id="cfg-saldo-jobb" placeholder="15000"></div>
+      <div class="form-group"><label>Brukskonto (kr)</label><input type="number" id="cfg-saldo-bruk" placeholder="8000"></div>
+    </div>
+    <div class="grid-2">
+      <div class="form-group"><label>Sparekonto (kr)</label><input type="number" id="cfg-saldo-spare" placeholder="120000"></div>
+      <div class="form-group"><label>Nordnet / aksjer (kr)</label><input type="number" id="cfg-saldo-nordnet" placeholder="25000"></div>
+    </div>
+  </div>
+
+  <div class="config-section">
     <h3>Økonomi</h3>
     <div class="grid-2">
       <div class="form-group"><label>Månedlig inntekt (kr)</label><input type="number" id="cfg-inntekt" placeholder="52000"></div>
@@ -743,6 +756,11 @@ function renderGoals() {
 
 function loadConfigToForm() {
   const cfg = JSON.parse(localStorage.getItem('sparingConfig') || '{}');
+  const saldoer = cfg.saldoer || {};
+  if (saldoer.jobb) document.getElementById('cfg-saldo-jobb').value = saldoer.jobb;
+  if (saldoer.bruk) document.getElementById('cfg-saldo-bruk').value = saldoer.bruk;
+  if (saldoer.spare) document.getElementById('cfg-saldo-spare').value = saldoer.spare;
+  if (saldoer.nordnet) document.getElementById('cfg-saldo-nordnet').value = saldoer.nordnet;
   if (cfg.månedlig_inntekt_estimat) document.getElementById('cfg-inntekt').value = cfg.månedlig_inntekt_estimat;
   if (cfg.månedlig_husleie) document.getElementById('cfg-husleie').value = cfg.månedlig_husleie;
   if (cfg.ønsket_buffer_brukskonto) document.getElementById('cfg-buffer').value = cfg.ønsket_buffer_brukskonto;
@@ -765,6 +783,12 @@ function loadConfigToForm() {
 
 function saveConfig() {
   const cfg = {
+    saldoer: {
+      jobb: +document.getElementById('cfg-saldo-jobb').value || null,
+      bruk: +document.getElementById('cfg-saldo-bruk').value || null,
+      spare: +document.getElementById('cfg-saldo-spare').value || null,
+      nordnet: +document.getElementById('cfg-saldo-nordnet').value || null,
+    },
     månedlig_inntekt_estimat: +document.getElementById('cfg-inntekt').value || undefined,
     månedlig_husleie: +document.getElementById('cfg-husleie').value || undefined,
     ønsket_buffer_brukskonto: +document.getElementById('cfg-buffer').value || 15000,
