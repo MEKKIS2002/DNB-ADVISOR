@@ -615,7 +615,35 @@ function toggleDark() {
 }
 
 // ══ Excel / CSV parsing ═════════════════════════════════════════════════════
-function triggerFile(id) { document.getElementById(id).click(); }
+function filterRecentCsv(csv, days = 60) {
+  if (!csv) return csv;
+  const lines = csv.trim().split('\n').filter(Boolean);
+  if (lines.length < 2) return csv;
+  const header = lines[0];
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+
+  const filtered = lines.slice(1).filter(row => {
+    const cell = row.split(/[;,\t]/)[0]?.replace(/"/g, '').trim();
+    if (!cell || cell.toLowerCase() === 'dato') return false;
+    let d;
+    if (cell.includes('.')) {
+      const [dd, mm, yyyy] = cell.split('.');
+      d = new Date(+yyyy, +mm - 1, +dd);
+    } else if (cell.includes('/')) {
+      const p = cell.split('/');
+      if (p.length === 3 && +p[2] > 31) {
+        d = +p[1] > 12
+          ? new Date(+p[2], +p[0] - 1, +p[1])  // M/D/YYYY
+          : new Date(+p[2], +p[1] - 1, +p[0]);  // D/M/YYYY
+      } else { d = new Date(cell); }
+    } else { d = new Date(cell); }
+    return isNaN(d.getTime()) || d >= cutoff;
+  });
+
+  const result = filtered.length >= 5 ? filtered : lines.slice(1).slice(-40);
+  return [header, ...result].join('\n');
+}
 
 async function loadFile(type, input) {
   const file = input.files[0];
@@ -846,7 +874,7 @@ async function startAnalysis() {
     const res = await fetch(S.workerUrl, {
       method: 'POST', headers,
       body: JSON.stringify({
-        jobb_csv: S.jobbCsv, dnb_csv: S.dnbCsv, spare_csv: S.spareCsv, nordnet_csv: S.nordnetCsv,
+        jobb_csv: filterRecentCsv(S.jobbCsv), dnb_csv: filterRecentCsv(S.dnbCsv), spare_csv: filterRecentCsv(S.spareCsv), nordnet_csv: S.nordnetCsv,
         config, last_week: lastWeek, portfolio_history: portfolioHistory,
         week_label: `Uke ${weekNum} — ${now.getFullYear()}`,
         preview_only: !S.sendDiscord,
@@ -1040,14 +1068,14 @@ function buildKategoriChart(kategorier) {
   wrap.style.height = h + 'px';
   const dark = isDark();
   const labels = kategorier.map(k => k.navn);
-  const månedsinntekt = JSON.parse(localStorage.getItem('sparingConfig') || '{}').månedlig_inntekt_estimat || 80000;
+  const MAX_KAT = 25000; // Maks rimelig beløp per kategori per måned
   const faktisk = kategorier.map(k => {
     const v = parseInt(String(k.brukt || 0).replace(/\D/g,''));
-    return (isNaN(v) || v > månedsinntekt) ? 0 : v;
+    return (isNaN(v) || v > MAX_KAT) ? 0 : v;
   });
   const budsjett = kategorier.map(k => {
     const v = parseInt(String(k.budsjett || 0).replace(/\D/g,''));
-    return (isNaN(v) || v > månedsinntekt) ? 0 : v;
+    return (isNaN(v) || v > MAX_KAT) ? 0 : v;
   });
   charts.kategori = new Chart(document.getElementById('kategoriChart'), {
     type: 'bar',
