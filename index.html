@@ -837,22 +837,28 @@ async function startAnalysis() {
 }
 
 async function sendDiscordNow() {
-  if (!S.lastData || !S.jobbCsv) return;
   const btn = document.getElementById('discordBtn');
+  if (!S.jobbCsv || !S.dnbCsv || !S.spareCsv) {
+    alert('CSVene er ikke tilgjengelig. Kjør analysen på nytt med Discord-bryteren aktivert.');
+    return;
+  }
   btn.textContent = 'Sender...'; btn.disabled = true;
   try {
     const headers = { 'Content-Type': 'application/json' };
     if (S.agentSecret) headers['X-Agent-Secret'] = S.agentSecret;
-    await fetch(S.workerUrl, {
+    const res = await fetch(S.workerUrl, {
       method: 'POST', headers,
       body: JSON.stringify({
-        jobb_csv: S.jobbCsv, dnb_csv: S.dnbCsv, spare_csv: S.spareCsv,
+        jobb_csv: S.jobbCsv, dnb_csv: S.dnbCsv, spare_csv: S.spareCsv, nordnet_csv: S.nordnetCsv,
         config: JSON.parse(localStorage.getItem('sparingConfig') || '{}'),
+        last_week: JSON.parse(localStorage.getItem('lastWeek') || 'null'),
+        week_label: document.getElementById('dashWeekLabel').textContent,
         preview_only: false,
       }),
     });
-    btn.textContent = 'Sendt ✓';
-    setTimeout(() => { btn.textContent = 'Discord'; btn.disabled = false; }, 2000);
+    if (!res.ok) throw new Error('Worker svarte ' + res.status);
+    btn.textContent = '✓ Sendt!';
+    setTimeout(() => { btn.textContent = 'Discord'; btn.disabled = false; }, 3000);
   } catch(e) {
     alert('Discord-feil: ' + e.message);
     btn.textContent = 'Discord'; btn.disabled = false;
@@ -917,13 +923,14 @@ function buildKategoriChart(kategorier) {
   wrap.style.height = h + 'px';
   const dark = isDark();
   const labels = kategorier.map(k => k.navn);
+  const månedsinntekt = JSON.parse(localStorage.getItem('sparingConfig') || '{}').månedlig_inntekt_estimat || 80000;
   const faktisk = kategorier.map(k => {
     const v = parseInt(String(k.brukt || 0).replace(/\D/g,''));
-    return isNaN(v) ? 0 : v;
+    return (isNaN(v) || v > månedsinntekt) ? 0 : v;
   });
   const budsjett = kategorier.map(k => {
     const v = parseInt(String(k.budsjett || 0).replace(/\D/g,''));
-    return isNaN(v) ? 0 : v;
+    return (isNaN(v) || v > månedsinntekt) ? 0 : v;
   });
   charts.kategori = new Chart(document.getElementById('kategoriChart'), {
     type: 'bar',
@@ -996,10 +1003,11 @@ function renderDashboard(d) {
   document.getElementById('warning-area').innerHTML = advarsel
     ? `<div class="warning-banner">⚠️ ${advarsel}</div>` : '';
 
-  // Sparerate donut
+  // Sparerate donut — parse kun prosent-tallet
   const sparerateTxt = ok.sparerate || '0%';
-  const sparePct = parseInt(sparerateTxt) || 0;
-  document.getElementById('donutPct').textContent = sparerateTxt;
+  const sparePct = parseInt(sparerateTxt.replace(/[^0-9]/g, '')) || 0;
+  const sparePctDisplay = sparePct + '%';
+  document.getElementById('donutPct').textContent = sparePctDisplay;
   buildDonut(sparePct);
 
   // Cashflow
