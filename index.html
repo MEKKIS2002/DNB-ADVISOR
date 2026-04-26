@@ -822,36 +822,45 @@ function updatePortfolioHistory(data) {
 function renderDashboard(d) {
   document.getElementById('dashWeekLabel').textContent = d.uke || '';
 
-  // Warning
+  // Warning — støtter begge JSON-strukturer
   const wa = document.getElementById('warning-area');
-  wa.innerHTML = d.advarsel ? `<div class="warning-banner">⚠️ ${d.advarsel}</div>` : '';
+  const advarselTekst = d.advarsel || d.sparekonto_advarsel;
+  wa.innerHTML = advarselTekst ? `<div class="warning-banner">⚠️ ${advarselTekst}</div>` : '';
 
-  // Økonomi
-  const øk = d.økonomi || {};
+  // Økonomi — ny struktur: d.okonomi, gammel: d.økonomi
+  const øk = d.okonomi || d.økonomi || {};
   document.getElementById('okonomi-analyse').textContent = øk.analyse || '';
 
-  const prog = d.månedsprognose;
-  const progPillMap = { på_kurs: ['pill-ok','På kurs'], over_budsjett: ['pill-over','Over budsjett'], under_budsjett: ['pill-warn','Under budsjett'] };
-  const [pillCls, pillTxt] = progPillMap[prog?.status] || ['pill-info','—'];
+  // Prognose — ny: d.prognose, gammel: d.månedsprognose
+  const prog = d.prognose || d.månedsprognose;
+  const progStatus = prog?.status || '';
+  const progPillMap = {
+    paa_kurs: ['pill-ok','På kurs'], på_kurs: ['pill-ok','På kurs'],
+    over_budsjett: ['pill-over','Over budsjett'],
+    under_budsjett: ['pill-warn','Under budsjett']
+  };
+  const [pillCls, pillTxt] = progPillMap[progStatus] || ['pill-info','—'];
   document.getElementById('prognose-pill').innerHTML = prog ? `<span class="pill ${pillCls}">${pillTxt}</span>` : '';
 
+  // Økonomi stats — håndterer begge feltnavn-varianter
   document.getElementById('okonomi-stats').innerHTML = [
-    { label: 'Jobbkonto (est.)', value: øk.estimert_jobbkonto_saldo, cls: '' },
-    { label: 'Brukskonto (est.)', value: øk.estimert_brukskonto_saldo, cls: '' },
-    { label: 'Sparekonto (est.)', value: øk.estimert_sparekonto_saldo, cls: '' },
-    { label: 'Lønn inn', value: øk.lønn_inn, cls: '' },
-    { label: 'Overført til brukskonto', value: øk.overført_til_brukskonto, cls: '' },
-    { label: 'Overført til sparekonto', value: øk.overført_til_sparekonto, cls: 'positive' },
-    { label: 'Sparerate', value: øk.sparerate, cls: 'positive' },
-    { label: 'Reelt forbruk (brukskonto)', value: øk.reelt_forbruk_brukskonto, cls: '' },
-    { label: 'Anbefalt til sparing', value: øk.anbefalt_til_sparing, cls: 'gold' },
-  ].map(s => `<div class="stat"><div class="stat-label">${s.label}</div><div class="stat-value ${s.cls}">${s.value || '—'}</div></div>`).join('');
+    { label: 'Jobbkonto (est.)',        value: øk.jobbkonto_saldo || øk.estimert_jobbkonto_saldo },
+    { label: 'Brukskonto (est.)',        value: øk.brukskonto_saldo || øk.estimert_brukskonto_saldo },
+    { label: 'Sparekonto (est.)',        value: øk.sparekonto_saldo || øk.estimert_sparekonto_saldo },
+    { label: 'Lønn inn',                value: øk.lonn_inn || øk.lønn_inn },
+    { label: 'Overført til brukskonto', value: øk.til_brukskonto || øk.overført_til_brukskonto },
+    { label: 'Overført til sparekonto', value: øk.til_sparekonto || øk.overført_til_sparekonto, cls: 'positive' },
+    { label: 'Sparerate',               value: øk.sparerate, cls: 'positive' },
+    { label: 'Reelt forbruk',           value: øk.forbruk || øk.reelt_forbruk_brukskonto },
+    { label: 'Anbefalt til sparing',    value: øk.anbefalt_sparing || øk.anbefalt_til_sparing, cls: 'gold' },
+  ].map(s => `<div class="stat"><div class="stat-label">${s.label}</div><div class="stat-value ${s.cls||''}">${s.value || '—'}</div></div>`).join('');
 
   // Månedsprognose
-  document.getElementById('prognose-tekst').textContent = prog?.beskrivelse || '—';
+  const progTekst = prog?.tekst || prog?.beskrivelse || '—';
+  document.getElementById('prognose-tekst').textContent = progTekst;
   document.getElementById('prognose-stats').innerHTML = [
-    { label: 'Estimert totalt', value: prog?.estimert_totalforbruk },
-    { label: 'Daglig snitt', value: prog?.daglig_snittforbruk },
+    { label: 'Estimert totalt', value: prog?.total || prog?.estimert_totalforbruk },
+    { label: 'Daglig snitt',    value: prog?.daglig || prog?.daglig_snittforbruk },
   ].map(s => `<div class="stat"><div class="stat-label">${s.label}</div><div class="stat-value">${s.value||'—'}</div></div>`).join('');
 
   // Uke-over-uke
@@ -859,53 +868,57 @@ function renderDashboard(d) {
   document.getElementById('uou-content').innerHTML = uou?.tilgjengelig ? `
     <div class="compare-row"><span style="color:var(--ink-muted)">Inntektsendring</span><span style="font-weight:500">${uou.inntekt_endring||'—'}</span></div>
     <div class="compare-row"><span style="color:var(--ink-muted)">Utgiftsendring</span><span style="font-weight:500">${uou.utgifter_endring||'—'}</span></div>
-    <div style="margin-top:14px;font-size:13px;color:var(--ink-muted);line-height:1.6">${uou.største_endring||''}</div>
+    <div style="margin-top:14px;font-size:13px;color:var(--ink-muted);line-height:1.6">${uou.største_endring||uou.storste_endring||''}</div>
   ` : '<p style="font-size:14px;color:var(--ink-faint);font-style:italic">Ingen historikk ennå — tilgjengelig fra neste rapport.</p>';
 
   // Kategoribudsjett
   const kategorier = d.kategorier || [];
   const katColorMap = { ok: 'sage', advarsel: 'amber', over: 'rose' };
-  document.getElementById('kategori-content').innerHTML = kategorier.length ? kategorier.map(k => `
+  document.getElementById('kategori-content').innerHTML = kategorier.length ? kategorier.map(k => {
+    const pillCls = k.status === 'ok' ? 'ok' : k.status === 'advarsel' ? 'warn' : 'over';
+    return `
     <div class="progress-wrap">
       <div class="progress-label">
         <span style="font-size:14px">${k.navn}</span>
         <div style="display:flex;align-items:center;gap:8px">
-          <span class="pill pill-${k.status === 'ok' ? 'ok' : k.status === 'advarsel' ? 'warn' : 'over'}">${k.brukt}</span>
+          <span class="pill pill-${pillCls}">${k.brukt}</span>
           <span style="font-size:12px;color:var(--ink-faint)">/ ${k.budsjett}</span>
         </div>
       </div>
       <div class="progress-track"><div class="progress-fill ${katColorMap[k.status]||'sage'}" style="width:${Math.min(k.prosent||0,100)}%"></div></div>
-    </div>
-  `).join('') : '<p style="font-size:14px;color:var(--ink-faint);font-style:italic">Ingen budsjettdata tilgjengelig.</p>';
+    </div>`;
+  }).join('') : '<p style="font-size:14px;color:var(--ink-faint);font-style:italic">Ingen budsjettdata tilgjengelig.</p>';
 
   // Sparemål
-  const mål = d.sparemål || [];
-  const målColorMap = { på_kurs: 'sage', bak_skjema: 'amber', ingen_frist: 'gold' };
-  document.getElementById('sparemal-content').innerHTML = mål.length ? mål.map(m => `
+  const mål = d.sparemål || d.sparemal || [];
+  const målColorMap = { på_kurs: 'sage', paa_kurs: 'sage', bak_skjema: 'amber', ingen_frist: 'gold' };
+  document.getElementById('sparemal-content').innerHTML = mål.length ? mål.map(m => {
+    const st = m.status || '';
+    const pillCls = (st==='på_kurs'||st==='paa_kurs') ? 'ok' : st==='bak_skjema' ? 'warn' : 'info';
+    return `
     <div style="margin-bottom:20px">
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
         <span style="font-size:15px;font-weight:500">${m.navn}</span>
-        <span class="pill pill-${m.status==='på_kurs'?'ok':m.status==='bak_skjema'?'warn':'info'}">${m.prosent||0}%</span>
+        <span class="pill pill-${pillCls}">${m.prosent||0}%</span>
       </div>
-      <div class="progress-track"><div class="progress-fill ${målColorMap[m.status]||'sage'}" style="width:${Math.min(m.prosent||0,100)}%"></div></div>
+      <div class="progress-track"><div class="progress-fill ${målColorMap[st]||'sage'}" style="width:${Math.min(m.prosent||0,100)}%"></div></div>
       <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:13px;color:var(--ink-muted)">
-        <span>${m.nåværende} av ${m.mål}</span>
-        <span>Gjenstår: ${m.gjenstår}${m.måneder_til_mål ? ` · ${m.måneder_til_mål} mnd` : ''}</span>
+        <span>${m.nåværende||m.naavaerende||'—'} av ${m.mål||m.maal||'—'}</span>
+        <span>Gjenstår: ${m.gjenstår||m.gjenstar||'—'}${m.måneder_til_mål||m.maaneder_til_maal ? ` · ${m.måneder_til_mål||m.maaneder_til_maal} mnd` : ''}</span>
       </div>
-      <div style="font-size:13px;color:var(--ink-faint);margin-top:4px">Anbefalt månedlig sparing: <strong style="color:var(--ink)">${m.anbefalt_månedlig}</strong></div>
-    </div>
-  `).join('') : '<p style="font-size:14px;color:var(--ink-faint);font-style:italic">Ingen sparemål definert i config.json.</p>';
+      <div style="font-size:13px;color:var(--ink-faint);margin-top:4px">Anbefalt: <strong style="color:var(--ink)">${m.anbefalt_månedlig||m.anbefalt_maanedlig||'—'}</strong></div>
+    </div>`;
+  }).join('') : '<p style="font-size:14px;color:var(--ink-faint);font-style:italic">Ingen sparemål definert i config.json.</p>';
 
   // Portefølje
-  const pf = d.portefølje || {};
+  const pf = d.portefolje || d.portefølje || {};
   document.getElementById('pf-analyse').textContent = pf.analyse || '';
   document.getElementById('pf-total').textContent = pf.total_verdi || '—';
-  const uke = pf.uke_endring || '—';
+  const ukeEnd = pf.uke_endring || '—';
   const ukeEl = document.getElementById('pf-uke');
-  ukeEl.textContent = uke;
-  ukeEl.className = uke.startsWith('+') ? 'positive' : uke.startsWith('-') ? 'negative' : '';
-  ukeEl.style.fontSize = '20px'; ukeEl.style.fontFamily = "'Cormorant Garamond',serif";
-
+  ukeEl.textContent = ukeEnd;
+  ukeEl.className = ukeEnd.startsWith('+') ? 'positive' : ukeEnd.startsWith('-') ? 'negative' : '';
+  ukeEl.style.cssText = 'font-size:20px;font-family:"Cormorant Garamond",serif';
   const beholdninger = pf.beholdninger || [];
   document.getElementById('pf-body').innerHTML = beholdninger.length ? beholdninger.map(b => {
     const up = (b.endring_uke||'').startsWith('+');
@@ -916,7 +929,7 @@ function renderDashboard(d) {
   const bsu = d.bsu || {};
   document.getElementById('bsu-content').innerHTML = bsu.aktiv ? `
     <div class="stat-grid" style="grid-template-columns:1fr 1fr;margin-bottom:12px">
-      <div class="stat"><div class="stat-label">Gjenstående kvote</div><div class="stat-value gold">${bsu.gjenstående_kvote_i_år||'—'}</div></div>
+      <div class="stat"><div class="stat-label">Gjenstående kvote</div><div class="stat-value gold">${bsu.gjenstående_kvote_i_år||bsu.gjenstaende_kvote_i_aar||'—'}</div></div>
       <div class="stat"><div class="stat-label">Mulig skattefradrag</div><div class="stat-value positive">${bsu.potensiell_skattefradrag||'—'}</div></div>
     </div>
     <p style="font-size:13px;color:var(--ink-muted);line-height:1.6">${bsu.anbefaling||''}</p>
@@ -932,26 +945,31 @@ function renderDashboard(d) {
     <p style="font-size:13px;color:var(--ink-muted);line-height:1.6">${skatt.ask_fordel||''}</p>
   `;
 
-  // Faste utgifter
-  const faste = d.faste_utgifter || {};
-  document.getElementById('faste-analyse').textContent = faste.analyse || '';
-  const nyeFaste = new Set(faste.nye_siden_sist||[]);
-  document.getElementById('faste-list').innerHTML = (faste.oppdaget||[]).map(e => {
-    const isNew = [...nyeFaste].some(n => e.includes(n.split(' ')[0]));
-    return `<li><span>${e}${isNew ? '<span class="new-tag">Ny</span>' : ''}</span><span class="amount"></span></li>`;
-  }).join('') || '<li style="color:var(--ink-faint);font-style:italic">Ingen faste utgifter oppdaget</li>';
+  // Faste utgifter — ny: d.faste (array), gammel: d.faste_utgifter (objekt)
+  const fasteArr = Array.isArray(d.faste) ? d.faste : null;
+  const fasteObj = d.faste_utgifter || {};
+  document.getElementById('faste-analyse').textContent = fasteObj.analyse || '';
+  if (fasteArr && fasteArr.length) {
+    document.getElementById('faste-list').innerHTML = fasteArr.map(f =>
+      `<li><span>${f.navn}</span><span class="amount">${f.belop || ''}</span></li>`
+    ).join('');
+  } else {
+    document.getElementById('faste-list').innerHTML = (fasteObj.oppdaget||[]).map(e =>
+      `<li><span>${e}</span><span class="amount"></span></li>`
+    ).join('') || '<li style="color:var(--ink-faint);font-style:italic">Ingen faste utgifter oppdaget</li>';
+  }
 
   // Markedsdata
   document.getElementById('market-tekst').textContent = d.markedsdata?.sammendrag || 'Ingen markedsdata tilgjengelig.';
 
-  // Anbefalinger
+  // Anbefalinger — ny: {tittel, tekst}, gammel: {tittel, beskrivelse, emoji}
   const anb = d.anbefalinger || [];
   document.getElementById('anbefalinger-content').innerHTML = anb.map((a, i) => `
     <div class="rec">
       <div class="rec-num">${i+1}</div>
       <div>
-        <div class="rec-title">${a.emoji || ''} ${a.tittel}</div>
-        <div class="rec-desc">${a.beskrivelse}</div>
+        <div class="rec-title">${a.emoji||''} ${a.tittel}</div>
+        <div class="rec-desc">${a.tekst || a.beskrivelse || ''}</div>
       </div>
     </div>
   `).join('') || '<p style="color:var(--ink-faint);font-style:italic">Ingen anbefalinger.</p>';
