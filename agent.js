@@ -30,7 +30,9 @@ if (!WORKER_URL) {
 const PATHS = {
   data: path.join(__dirname, "data"),
   history: path.join(__dirname, "data", "history"),
-  dnbCsv: path.join(__dirname, "data", "dnb_transactions.csv"),
+  jobbCsv: path.join(__dirname, "data", "jobbkonto.csv"),
+  dnbCsv: path.join(__dirname, "data", "brukskonto.csv"),
+  spareCsv: path.join(__dirname, "data", "sparekonto.csv"),
   nordnetCsv: path.join(__dirname, "data", "nordnet_portfolio.csv"),
   config: path.join(__dirname, "config.json"),
   lastWeek: path.join(__dirname, "data", "history", "last_week.json"),
@@ -137,9 +139,15 @@ async function runAgent() {
   sikkerHistoryMappe();
 
   // Les CSV
+  const jobbCsv = lesFilEllerNull(PATHS.jobbCsv);
   const dnbCsv = lesFilEllerNull(PATHS.dnbCsv);
-  if (!dnbCsv) {
-    console.error("❌ dnb_transactions.csv er påkrevd. Last ned fra DNB Nettbank og legg i /data/");
+  const spareCsv = lesFilEllerNull(PATHS.spareCsv);
+
+  if (!jobbCsv || !dnbCsv || !spareCsv) {
+    console.error("❌ Mangler én eller flere CSV-filer. Trenger:");
+    console.error("   data/jobbkonto.csv");
+    console.error("   data/brukskonto.csv");
+    console.error("   data/sparekonto.csv");
     process.exit(1);
   }
   const nordnetCsv = lesFilEllerNull(PATHS.nordnetCsv);
@@ -162,7 +170,9 @@ async function runAgent() {
 
   // Bygg payload
   const payload = {
+    jobb_csv: jobbCsv,
     dnb_csv: dnbCsv,
+    spare_csv: spareCsv,
     nordnet_csv: nordnetCsv,
     config,
     last_week: lastWeek,
