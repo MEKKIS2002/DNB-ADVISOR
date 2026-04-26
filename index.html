@@ -1,494 +1,316 @@
 <!DOCTYPE html>
-<html lang="nb">
+<html lang="nb" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sparingsagent — Økonomirapport</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<title>Sparingsagent</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
-  :root {
-    --cream: #F7F3ED;
-    --cream-deep: #EDE7DC;
-    --ink: #2C2825;
-    --ink-muted: #6B6460;
-    --ink-faint: #A89F99;
-    --gold: #B8924A;
-    --gold-light: #D4AE72;
-    --sage: #5C7A5C;
-    --sage-light: #E8F0E8;
-    --rose: #A05050;
-    --rose-light: #F5E8E8;
-    --amber: #C47A20;
-    --amber-light: #FBF0E0;
-    --blue: #3A5F8A;
-    --blue-light: #E8EFF8;
-    --border: rgba(44,40,37,0.12);
-    --border-soft: rgba(44,40,37,0.07);
-    --shadow: 0 2px 16px rgba(44,40,37,0.08);
-    --radius: 12px;
-    --radius-sm: 8px;
-  }
+:root{
+  --cream:#F7F3ED;--cream-deep:#EDE7DC;--cream-mid:#E5DDD3;
+  --ink:#2C2825;--ink-muted:#6B6460;--ink-faint:#A89F99;
+  --gold:#B8924A;--gold-light:#D4AE72;
+  --sage:#4A7A4A;--sage-bg:#EAF3EA;
+  --rose:#A04040;--rose-bg:#F5E8E8;
+  --amber:#B8720A;--amber-bg:#FBF0E0;
+  --blue:#3A5F8A;--blue-bg:#E8EFF8;
+  --border:rgba(44,40,37,0.12);--border-soft:rgba(44,40,37,0.07);
+  --card-bg:#ffffff;--page-bg:var(--cream);
+  --shadow:0 1px 8px rgba(44,40,37,0.07);
+  --radius:12px;--radius-sm:8px;
+}
+[data-theme="dark"]{
+  --cream:#1C1916;--cream-deep:#252219;--cream-mid:#2E2A25;
+  --ink:#F0EBE3;--ink-muted:#A89F99;--ink-faint:#6B6460;
+  --gold:#D4AE72;--gold-light:#E8C98A;
+  --sage:#6AAD6A;--sage-bg:#1A2E1A;
+  --rose:#D07070;--rose-bg:#2E1A1A;
+  --amber:#E09030;--amber-bg:#2E2010;
+  --blue:#7AAAD0;--blue-bg:#1A2535;
+  --border:rgba(240,235,227,0.1);--border-soft:rgba(240,235,227,0.05);
+  --card-bg:#252219;--page-bg:var(--cream);
+}
 
-  body {
-    font-family: 'DM Sans', system-ui, sans-serif;
-    background: var(--cream);
-    color: var(--ink);
-    min-height: 100vh;
-    font-size: 15px;
-    line-height: 1.6;
-  }
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--page-bg);color:var(--ink);min-height:100vh;font-size:15px;line-height:1.6;transition:background .3s,color .3s}
+h1,h2,h3,.serif{font-family:'Cormorant Garamond',Georgia,serif}
+a{color:var(--gold);text-decoration:none}
 
-  h1, h2, h3, .serif { font-family: 'Cormorant Garamond', Georgia, serif; }
+/* ── Layout ── */
+.app{max-width:1140px;margin:0 auto;padding:0 20px 80px}
+.header{padding:28px 0 20px;border-bottom:1px solid var(--border);margin-bottom:36px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.header h1{font-size:26px;font-weight:500;letter-spacing:-.02em}
+.header-actions{display:flex;gap:8px;align-items:center}
 
-  /* ── Layout ────────────────────────── */
-  .app { max-width: 1100px; margin: 0 auto; padding: 0 24px 80px; }
+/* ── Cards ── */
+.card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:22px 26px;margin-bottom:18px;box-shadow:var(--shadow)}
+.card-title{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted);margin-bottom:14px}
+.section-label{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted)}
 
-  header {
-    padding: 32px 0 24px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 40px;
-    display: flex;
-    align-items: baseline;
-    gap: 16px;
-  }
-  header h1 { font-size: 28px; font-weight: 500; letter-spacing: -0.02em; color: var(--ink); }
-  header .sub { font-size: 14px; color: var(--ink-muted); font-family: 'DM Sans', sans-serif; }
+/* ── Stats ── */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stat{background:var(--cream-deep);border-radius:var(--radius-sm);padding:14px 16px;border:1px solid var(--border-soft)}
+.stat-label{font-size:11px;color:var(--ink-muted);margin-bottom:5px;font-weight:400}
+.stat-value{font-size:20px;font-family:'Cormorant Garamond',serif;font-weight:500;color:var(--ink)}
+.stat-value.pos{color:var(--sage)} .stat-value.neg{color:var(--rose)} .stat-value.gold{color:var(--gold)}
+.stat.highlight-pos{border-color:var(--sage);background:var(--sage-bg)}
+.stat.highlight-neg{border-color:var(--rose);background:var(--rose-bg)}
+.stat.highlight-gold{border-color:var(--gold);background:var(--amber-bg)}
 
-  /* ── Cards ─────────────────────────── */
-  .card {
-    background: #fff;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 24px 28px;
-    margin-bottom: 20px;
-  }
-  .card-title {
-    font-size: 13px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--ink-muted);
-    margin-bottom: 16px;
-  }
-  .card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-  }
-  .card-header h2 { font-size: 22px; font-weight: 500; }
+/* ── Pills ── */
+.pill{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:500}
+.pill-ok{background:var(--sage-bg);color:var(--sage)}
+.pill-warn{background:var(--amber-bg);color:var(--amber)}
+.pill-over{background:var(--rose-bg);color:var(--rose)}
+.pill-info{background:var(--blue-bg);color:var(--blue)}
+.pill-gold{background:var(--amber-bg);color:var(--gold)}
 
-  /* ── Stat grid ─────────────────────── */
-  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
-  .stat {
-    background: var(--cream);
-    border-radius: var(--radius-sm);
-    padding: 16px 18px;
-    border: 1px solid var(--border-soft);
-  }
-  .stat-label { font-size: 12px; color: var(--ink-muted); margin-bottom: 6px; font-weight: 400; }
-  .stat-value { font-size: 22px; font-family: 'Cormorant Garamond', serif; font-weight: 500; color: var(--ink); }
-  .stat-value.positive { color: var(--sage); }
-  .stat-value.negative { color: var(--rose); }
-  .stat-value.gold { color: var(--gold); }
-  .stat-sub { font-size: 12px; color: var(--ink-faint); margin-top: 2px; }
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--ink);transition:all .15s}
+.btn:hover{background:var(--cream-deep)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-primary{background:var(--ink);color:var(--cream);border-color:var(--ink)}
+.btn-primary:hover{background:#3C3530;border-color:#3C3530}
+.btn-gold{background:var(--gold);color:#fff;border-color:var(--gold)}
+.btn-gold:hover{background:var(--amber)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-icon{padding:8px;border-radius:var(--radius-sm);width:36px;height:36px;justify-content:center}
 
-  /* ── Pill / Badge ──────────────────── */
-  .pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 10px;
-    border-radius: 99px;
-    font-size: 12px;
-    font-weight: 500;
-  }
-  .pill-ok { background: var(--sage-light); color: var(--sage); }
-  .pill-warn { background: var(--amber-light); color: var(--amber); }
-  .pill-over { background: var(--rose-light); color: var(--rose); }
-  .pill-info { background: var(--blue-light); color: var(--blue); }
+/* ── Upload zones ── */
+.upload-zone{border:1.5px dashed var(--border);border-radius:var(--radius);padding:24px 16px;text-align:center;cursor:pointer;transition:all .2s;background:var(--card-bg);position:relative}
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--gold);background:var(--amber-bg)}
+.upload-zone.loaded{border-style:solid;border-color:var(--sage);background:var(--sage-bg)}
+.upload-zone.error{border-style:solid;border-color:var(--rose);background:var(--rose-bg)}
+.upload-icon{font-size:22px;margin-bottom:6px}
+.upload-name{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:3px}
+.upload-desc{font-size:11px;color:var(--ink-muted)}
 
-  /* ── Progress bar ──────────────────── */
-  .progress-wrap { margin: 8px 0; }
-  .progress-label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; }
-  .progress-track { height: 6px; background: var(--cream-deep); border-radius: 99px; overflow: hidden; }
-  .progress-fill { height: 100%; border-radius: 99px; transition: width 0.6s ease; }
-  .progress-fill.sage { background: var(--sage); }
-  .progress-fill.gold { background: var(--gold); }
-  .progress-fill.rose { background: var(--rose); }
-  .progress-fill.amber { background: var(--amber); }
+/* ── Preview table ── */
+.preview-wrap{margin-top:12px;overflow-x:auto;border-radius:var(--radius-sm);border:1px solid var(--border)}
+.preview-table{width:100%;border-collapse:collapse;font-size:11px}
+.preview-table th{background:var(--cream-deep);padding:6px 10px;text-align:left;font-weight:500;color:var(--ink-muted);white-space:nowrap}
+.preview-table td{padding:5px 10px;border-top:1px solid var(--border-soft);color:var(--ink);white-space:nowrap}
+.preview-table tr:hover td{background:var(--cream-deep)}
 
-  /* ── Upload zone ───────────────────── */
-  .upload-zone {
-    border: 1.5px dashed var(--border);
-    border-radius: var(--radius);
-    padding: 32px 24px;
-    text-align: center;
-    cursor: pointer;
-    transition: border-color 0.2s, background 0.2s;
-    background: #fff;
-    position: relative;
-  }
-  .upload-zone:hover, .upload-zone.drag-over {
-    border-color: var(--gold);
-    background: var(--amber-light);
-  }
-  .upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-  .upload-icon { font-size: 24px; margin-bottom: 8px; }
-  .upload-name { font-size: 13px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
-  .upload-desc { font-size: 12px; color: var(--ink-muted); }
-  .upload-zone.loaded { border-style: solid; border-color: var(--sage); background: var(--sage-light); }
-  .upload-zone.loaded .upload-icon::after { content: " ✓"; }
+/* ── Forms ── */
+.form-group{margin-bottom:14px}
+label{font-size:12px;font-weight:500;color:var(--ink);display:block;margin-bottom:5px}
+input[type=text],input[type=url],input[type=number],select{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);background:var(--card-bg);outline:none;transition:border-color .2s}
+input:focus,select:focus{border-color:var(--gold)}
+.hint{font-size:11px;color:var(--ink-faint);margin-top:3px}
 
-  /* ── Form ──────────────────────────── */
-  .form-group { margin-bottom: 16px; }
-  label { font-size: 13px; font-weight: 500; color: var(--ink); display: block; margin-bottom: 6px; }
-  input[type="text"], input[type="url"], input[type="number"] {
-    width: 100%;
-    padding: 10px 14px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    color: var(--ink);
-    background: #fff;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  input:focus { border-color: var(--gold); }
-  .hint { font-size: 12px; color: var(--ink-faint); margin-top: 4px; }
+/* ── Progress ── */
+.prog-wrap{margin:10px 0}
+.prog-label{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;align-items:center}
+.prog-track{height:6px;background:var(--cream-mid);border-radius:99px;overflow:hidden}
+.prog-fill{height:100%;border-radius:99px;transition:width .6s ease}
+.prog-fill.sage{background:var(--sage)} .prog-fill.rose{background:var(--rose)} .prog-fill.amber{background:var(--amber)} .prog-fill.gold{background:var(--gold)}
 
-  /* ── Buttons ───────────────────────── */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 24px;
-    border-radius: var(--radius-sm);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    border: none;
-    transition: all 0.2s;
-  }
-  .btn-primary {
-    background: var(--ink);
-    color: var(--cream);
-  }
-  .btn-primary:hover { background: #3C3530; }
-  .btn-primary:disabled { background: var(--ink-faint); cursor: not-allowed; }
-  .btn-secondary {
-    background: transparent;
-    color: var(--ink);
-    border: 1px solid var(--border);
-  }
-  .btn-secondary:hover { background: var(--cream); }
-  .btn-gold {
-    background: var(--gold);
-    color: #fff;
-  }
-  .btn-gold:hover { background: var(--amber); }
+/* ── Grid layouts ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px}
+.grid-upload{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:750px){.grid-2,.grid-3,.grid-upload{grid-template-columns:1fr}}
 
-  /* ── Section heading ───────────────── */
-  .section-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 26px;
-    font-weight: 500;
-    color: var(--ink);
-    letter-spacing: -0.02em;
-    margin-bottom: 6px;
-  }
-  .section-sub { font-size: 13px; color: var(--ink-muted); margin-bottom: 24px; }
+/* ── Hero ── */
+.hero{display:grid;grid-template-columns:220px 1fr;gap:18px;margin-bottom:18px;align-items:start}
+@media(max-width:750px){.hero{grid-template-columns:1fr}}
+.donut-wrap{display:flex;flex-direction:column;align-items:center;padding:20px}
+.donut-center{position:relative;width:160px;height:160px}
+.donut-label{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.donut-pct{font-size:36px;font-family:'Cormorant Garamond',serif;font-weight:500;color:var(--ink);line-height:1}
+.donut-sub{font-size:11px;color:var(--ink-muted);margin-top:3px}
 
-  /* ── Analysis item ─────────────────── */
-  .analyse-tekst {
-    font-size: 14px;
-    color: var(--ink-muted);
-    font-style: italic;
-    line-height: 1.7;
-    border-left: 3px solid var(--cream-deep);
-    padding-left: 14px;
-    margin-bottom: 16px;
-  }
+/* ── Loader ── */
+.loader-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:22px}
+.loader-ring{width:44px;height:44px;border:3px solid var(--cream-mid);border-top-color:var(--gold);border-radius:50%;animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader-steps{list-style:none;text-align:center}
+.loader-steps li{font-size:13px;color:var(--ink-faint);padding:4px 0;transition:color .3s}
+.loader-steps li.active{color:var(--ink);font-weight:500}
+.loader-steps li.done{color:var(--sage)}
 
-  /* ── Recommendation ────────────────── */
-  .rec {
-    display: flex;
-    gap: 14px;
-    padding: 14px 0;
-    border-bottom: 1px solid var(--border-soft);
-  }
-  .rec:last-child { border-bottom: none; }
-  .rec-num {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: var(--cream-deep);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    font-weight: 500;
-    flex-shrink: 0;
-    margin-top: 1px;
-  }
-  .rec-title { font-size: 15px; font-weight: 500; margin-bottom: 3px; }
-  .rec-desc { font-size: 13px; color: var(--ink-muted); line-height: 1.6; }
+/* ── Recommendations ── */
+.rec{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border-soft)}
+.rec:last-child{border-bottom:none}
+.rec-num{width:26px;height:26px;border-radius:50%;background:var(--cream-deep);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0;margin-top:2px}
+.rec-title{font-size:14px;font-weight:500;margin-bottom:2px}
+.rec-desc{font-size:13px;color:var(--ink-muted);line-height:1.6}
 
-  /* ── Expenses list ─────────────────── */
-  .expense-list { list-style: none; }
-  .expense-list li {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 9px 0;
-    border-bottom: 1px solid var(--border-soft);
-    font-size: 14px;
-  }
-  .expense-list li:last-child { border-bottom: none; }
-  .expense-list .amount { font-family: 'Cormorant Garamond', serif; font-size: 16px; }
-  .new-tag {
-    font-size: 10px;
-    background: var(--amber-light);
-    color: var(--amber);
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-weight: 500;
-    margin-left: 6px;
-  }
+/* ── Expense list ── */
+.exp-list{list-style:none}
+.exp-list li{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border-soft);font-size:13px}
+.exp-list li:last-child{border-bottom:none}
+.new-tag{font-size:10px;background:var(--amber-bg);color:var(--amber);padding:2px 5px;border-radius:4px;margin-left:6px;font-weight:500}
 
-  /* ── Portfolio table ───────────────── */
-  .portfolio-table { width: 100%; border-collapse: collapse; }
-  .portfolio-table th {
-    font-size: 11px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--ink-muted);
-    text-align: left;
-    padding: 0 0 10px;
-    border-bottom: 1px solid var(--border);
-  }
-  .portfolio-table td { padding: 12px 0; border-bottom: 1px solid var(--border-soft); font-size: 14px; }
-  .portfolio-table tr:last-child td { border-bottom: none; }
-  .portfolio-table .change { font-weight: 500; }
-  .portfolio-table .change.up { color: var(--sage); }
-  .portfolio-table .change.down { color: var(--rose); }
+/* ── Portfolio table ── */
+.pf-table{width:100%;border-collapse:collapse}
+.pf-table th{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-muted);text-align:left;padding:0 0 8px;border-bottom:1px solid var(--border)}
+.pf-table td{padding:10px 0;border-bottom:1px solid var(--border-soft);font-size:13px}
+.pf-table tr:last-child td{border-bottom:none}
+.change.up{color:var(--sage);font-weight:500} .change.down{color:var(--rose);font-weight:500}
 
-  /* ── Market box ────────────────────── */
-  .market-box {
-    background: var(--cream);
-    border-radius: var(--radius-sm);
-    padding: 16px 20px;
-    font-size: 14px;
-    color: var(--ink);
-    line-height: 1.7;
-    border: 1px solid var(--border-soft);
-  }
+/* ── Warning ── */
+.warning-banner{background:var(--rose-bg);border:1px solid rgba(160,64,64,.2);border-radius:var(--radius-sm);padding:12px 16px;font-size:13px;color:var(--rose);margin-bottom:18px;line-height:1.6}
+.info-banner{background:var(--blue-bg);border:1px solid rgba(58,95,138,.2);border-radius:var(--radius-sm);padding:12px 16px;font-size:13px;color:var(--blue);margin-bottom:18px}
 
-  /* ── Status screen ─────────────────── */
-  #app-setup, #app-upload, #app-loading, #app-dashboard { display: none; }
-  #app-setup.active, #app-upload.active, #app-loading.active, #app-dashboard.active { display: block; }
+/* ── Config panel ── */
+.config-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;opacity:0;pointer-events:none;transition:opacity .25s}
+.config-overlay.open{opacity:1;pointer-events:all}
+.config-panel{position:fixed;right:0;top:0;bottom:0;width:min(480px,100vw);background:var(--card-bg);border-left:1px solid var(--border);z-index:101;transform:translateX(100%);transition:transform .25s;overflow-y:auto;padding:28px}
+.config-panel.open{transform:translateX(0)}
+.config-section{border-bottom:1px solid var(--border);padding-bottom:20px;margin-bottom:20px}
+.config-section:last-child{border-bottom:none}
+.config-section h3{font-size:16px;font-weight:500;margin-bottom:14px}
+.goal-row{display:flex;gap:8px;align-items:flex-end;margin-bottom:10px;flex-wrap:wrap}
+.goal-row .form-group{margin-bottom:0;flex:1;min-width:100px}
+.goal-row .btn{flex-shrink:0;margin-bottom:0}
 
-  /* ── Loader ────────────────────────── */
-  .loader-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 60vh;
-    gap: 24px;
-  }
-  .loader-ring {
-    width: 48px;
-    height: 48px;
-    border: 3px solid var(--cream-deep);
-    border-top-color: var(--gold);
-    border-radius: 50%;
-    animation: spin 0.9s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loader-steps { list-style: none; text-align: center; }
-  .loader-steps li {
-    font-size: 14px;
-    color: var(--ink-faint);
-    padding: 4px 0;
-    transition: color 0.3s;
-  }
-  .loader-steps li.active { color: var(--ink); font-weight: 500; }
-  .loader-steps li.done { color: var(--sage); }
+/* ── Cashflow ── */
+.cashflow{display:flex;align-items:center;justify-content:center;gap:0;padding:8px 0;flex-wrap:wrap}
+.cf-node{text-align:center;padding:12px 18px;border-radius:var(--radius-sm);min-width:120px}
+.cf-arrow{color:var(--ink-faint);font-size:20px;padding:0 6px;align-self:center}
+.cf-label{font-size:11px;color:var(--ink-muted);margin-bottom:4px}
+.cf-amount{font-size:18px;font-family:'Cormorant Garamond',serif;font-weight:500}
+.cf-jobb{background:var(--blue-bg);border:1px solid rgba(58,95,138,.2)}
+.cf-bruk{background:var(--rose-bg);border:1px solid rgba(160,64,64,.2)}
+.cf-spare{background:var(--sage-bg);border:1px solid rgba(74,122,74,.2)}
 
-  /* ── Warning banner ────────────────── */
-  .warning-banner {
-    background: var(--rose-light);
-    border: 1px solid rgba(160,80,80,0.2);
-    border-radius: var(--radius-sm);
-    padding: 14px 18px;
-    font-size: 14px;
-    color: var(--rose);
-    margin-bottom: 20px;
-  }
+/* ── Chart containers ── */
+.chart-wrap{position:relative;width:100%}
 
-  /* ── Top bar actions ───────────────── */
-  .top-actions { display: flex; gap: 12px; align-items: center; justify-content: flex-end; margin-bottom: 32px; flex-wrap: wrap; }
+/* ── Top actions ── */
+.top-actions{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap}
+.top-actions-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.top-actions-right{display:flex;gap:8px;align-items:center}
 
-  /* ── Grid layouts ──────────────────── */
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
-  @media (max-width: 700px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+/* ── Toggle ── */
+.toggle{width:38px;height:21px;background:var(--cream-mid);border-radius:99px;position:relative;cursor:pointer;border:none;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--sage)}
+.toggle-knob{width:15px;height:15px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle.on .toggle-knob{left:20px}
+.toggle-row{display:flex;align-items:center;gap:10px;font-size:13px}
 
-  /* ── Uke-over-uke compare ──────────── */
-  .compare-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border-soft);
-    font-size: 14px;
-  }
-  .compare-row:last-child { border-bottom: none; }
+/* ── Setup screen ── */
+.setup-wrap{max-width:500px;margin:80px auto}
+.setup-logo{font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:400;margin-bottom:6px}
+.setup-sub{color:var(--ink-muted);font-size:14px;margin-bottom:36px}
 
-  /* ── Setup screen ──────────────────── */
-  .setup-wrap { max-width: 540px; margin: 80px auto; }
-  .setup-logo { font-family: 'Cormorant Garamond', serif; font-size: 36px; font-weight: 400; color: var(--ink); margin-bottom: 8px; }
-  .setup-tagline { color: var(--ink-muted); font-size: 14px; margin-bottom: 40px; }
-  .step-indicator {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    margin-bottom: 32px;
-    font-size: 12px;
-    color: var(--ink-faint);
-  }
-  .step-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cream-deep); }
-  .step-dot.active { background: var(--gold); }
-  .step-dot.done { background: var(--sage); }
+/* ── Section divider ── */
+.divider{height:1px;background:var(--border);margin:8px 0 18px}
 
-  /* ── Upload grid ───────────────────── */
-  .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
-  @media (max-width: 600px) { .upload-grid { grid-template-columns: 1fr; } }
+/* ── Italic analysis text ── */
+.analyse-txt{font-size:13px;color:var(--ink-muted);font-style:italic;line-height:1.7;border-left:3px solid var(--cream-mid);padding-left:14px;margin-bottom:16px}
 
-  /* ── Toggleable discord section ────── */
-  .discord-toggle { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
-  .toggle-switch { width: 40px; height: 22px; background: var(--cream-deep); border-radius: 99px; position: relative; cursor: pointer; border: none; transition: background 0.2s; }
-  .toggle-switch.on { background: var(--sage); }
-  .toggle-knob { width: 16px; height: 16px; background: #fff; border-radius: 50%; position: absolute; top: 3px; left: 3px; transition: left 0.2s; }
-  .toggle-switch.on .toggle-knob { left: 21px; }
+/* ── Market box ── */
+.market-box{background:var(--cream-deep);border-radius:var(--radius-sm);padding:14px 18px;font-size:13px;line-height:1.7;border:1px solid var(--border-soft)}
 
-  footer { text-align: center; padding: 40px 0 20px; font-size: 12px; color: var(--ink-faint); }
+/* ── Print styles ── */
+@media print{
+  .top-actions,.header-actions,.btn,.config-overlay,.config-panel{display:none!important}
+  .card{break-inside:avoid;box-shadow:none;border:1px solid #ddd}
+  body{background:#fff;color:#000}
+  .app{padding:0}
+}
+
+/* ── Screens ── */
+#app-setup,#app-upload,#app-loading,#app-dashboard{display:none}
+#app-setup.active,#app-upload.active,#app-loading.active,#app-dashboard.active{display:block}
+
+footer{text-align:center;padding:40px 0 20px;font-size:11px;color:var(--ink-faint)}
 </style>
 </head>
 <body>
-
 <div class="app">
-  <header>
+  <header class="header">
     <h1>Sparingsagent</h1>
-    <span class="sub">Personlig økonomirapport — drevet av Claude AI</span>
+    <div class="header-actions">
+      <button class="btn btn-icon" onclick="toggleDark()" title="Bytt tema" id="darkBtn">🌙</button>
+    </div>
   </header>
 
   <!-- ══ SETUP ══ -->
   <div id="app-setup" class="active">
     <div class="setup-wrap">
       <div class="setup-logo">Kom i gang</div>
-      <p class="setup-tagline">Koble til din Cloudflare Worker for å starte analysene.</p>
-
-      <div class="step-indicator">
-        <div class="step-dot active" id="dot-1"></div>
-        <div class="step-dot" id="dot-2"></div>
-        <div class="step-dot" id="dot-3"></div>
-        <span style="margin-left:4px">Steg 1 av 3 — Tilkobling</span>
-      </div>
-
+      <p class="setup-sub">Koble til din Cloudflare Worker for å starte analysene.</p>
       <div class="card">
         <div class="card-title">Cloudflare Worker</div>
         <div class="form-group">
-          <label for="workerUrl">Worker URL</label>
+          <label>Worker URL</label>
           <input type="url" id="workerUrl" placeholder="https://sparing-agent.xxx.workers.dev">
-          <p class="hint">URL-en til din deployede Cloudflare Worker.</p>
         </div>
         <div class="form-group">
-          <label for="agentSecret">Agent Secret <span style="font-weight:300;color:var(--ink-faint)">(valgfritt)</span></label>
+          <label>Agent Secret <span style="font-weight:300;color:var(--ink-faint)">(valgfritt)</span></label>
           <input type="text" id="agentSecret" placeholder="ditt-secret">
-          <p class="hint">Samme AGENT_SECRET som er satt i Worker-en.</p>
         </div>
         <button class="btn btn-primary" onclick="goToUpload()" style="width:100%;justify-content:center;margin-top:8px">Fortsett →</button>
       </div>
-
-      <p style="text-align:center;font-size:12px;color:var(--ink-faint);margin-top:16px">
-        Ingen Worker ennå? Se <code>README.md</code> for oppsett.
-      </p>
     </div>
   </div>
 
   <!-- ══ UPLOAD ══ -->
   <div id="app-upload">
-    <div style="max-width:640px;margin:0 auto">
-      <div class="step-indicator">
-        <div class="step-dot done" id="dot-1b"></div>
-        <div class="step-dot active" id="dot-2b"></div>
-        <div class="step-dot" id="dot-3b"></div>
-        <span style="margin-left:4px">Steg 2 av 3 — Last opp data</span>
+    <div style="max-width:700px;margin:0 auto">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">
+        <h2 style="font-size:26px;font-weight:500">Last opp transaksjoner</h2>
+        <button class="btn btn-sm" onclick="openConfig()">⚙️ Rediger innstillinger</button>
       </div>
+      <p style="font-size:13px;color:var(--ink-muted);margin-bottom:20px">Eksporter fra DNB Nettbank — Excel (.xlsx) og CSV støttes.</p>
 
-      <div class="section-title">Last opp transaksjoner</div>
-      <p class="section-sub">Eksporter CSV fra DNB Nettbank og Nordnet, og last dem opp her.</p>
-
-      <div class="upload-grid" style="grid-template-columns:1fr 1fr 1fr">
+      <div class="grid-upload" style="margin-bottom:16px">
         <div>
-          <p style="font-size:13px;font-weight:500;margin-bottom:8px">Jobbkonto <span style="color:var(--rose)">*</span></p>
-          <div class="upload-zone" id="zone-jobb" onclick="document.getElementById('file-jobb').click()">
-            <input type="file" id="file-jobb" accept=".csv" style="display:none" onchange="loadFile('jobb', this)">
+          <p style="font-size:12px;font-weight:500;margin-bottom:7px">Jobbkonto <span style="color:var(--rose)">*</span></p>
+          <div class="upload-zone" id="zone-jobb" onclick="triggerFile('file-jobb')">
+            <input type="file" id="file-jobb" accept=".csv,.xlsx,.xls" style="display:none" onchange="loadFile('jobb',this)">
             <div class="upload-icon">💼</div>
-            <div class="upload-name">jobbkonto.csv</div>
-            <div class="upload-desc">Klikk eller dra fil hit</div>
+            <div class="upload-name" id="name-jobb">jobbkonto.xlsx</div>
+            <div class="upload-desc" id="desc-jobb">Klikk eller dra hit</div>
           </div>
-          <p class="hint" style="margin-top:6px">Lønnskontoen — inntekter inn</p>
+          <div id="preview-jobb" class="preview-wrap" style="display:none"></div>
         </div>
         <div>
-          <p style="font-size:13px;font-weight:500;margin-bottom:8px">Brukskonto <span style="color:var(--rose)">*</span></p>
-          <div class="upload-zone" id="zone-dnb" onclick="document.getElementById('file-dnb').click()">
-            <input type="file" id="file-dnb" accept=".csv" style="display:none" onchange="loadFile('dnb', this)">
+          <p style="font-size:12px;font-weight:500;margin-bottom:7px">Brukskonto <span style="color:var(--rose)">*</span></p>
+          <div class="upload-zone" id="zone-dnb" onclick="triggerFile('file-dnb')">
+            <input type="file" id="file-dnb" accept=".csv,.xlsx,.xls" style="display:none" onchange="loadFile('dnb',this)">
             <div class="upload-icon">💳</div>
-            <div class="upload-name">brukskonto.csv</div>
-            <div class="upload-desc">Klikk eller dra fil hit</div>
+            <div class="upload-name" id="name-dnb">brukskonto.xlsx</div>
+            <div class="upload-desc" id="desc-dnb">Klikk eller dra hit</div>
           </div>
-          <p class="hint" style="margin-top:6px">Daglig forbruk og utgifter</p>
+          <div id="preview-dnb" class="preview-wrap" style="display:none"></div>
         </div>
         <div>
-          <p style="font-size:13px;font-weight:500;margin-bottom:8px">Sparekonto <span style="color:var(--rose)">*</span></p>
-          <div class="upload-zone" id="zone-spare" onclick="document.getElementById('file-spare').click()">
-            <input type="file" id="file-spare" accept=".csv" style="display:none" onchange="loadFile('spare', this)">
+          <p style="font-size:12px;font-weight:500;margin-bottom:7px">Sparekonto <span style="color:var(--rose)">*</span></p>
+          <div class="upload-zone" id="zone-spare" onclick="triggerFile('file-spare')">
+            <input type="file" id="file-spare" accept=".csv,.xlsx,.xls" style="display:none" onchange="loadFile('spare',this)">
             <div class="upload-icon">🏦</div>
-            <div class="upload-name">sparekonto.csv</div>
-            <div class="upload-desc">Klikk eller dra fil hit</div>
+            <div class="upload-name" id="name-spare">sparekonto.xlsx</div>
+            <div class="upload-desc" id="desc-spare">Klikk eller dra hit</div>
           </div>
-          <p class="hint" style="margin-top:6px">Sparekontoen din</p>
+          <div id="preview-spare" class="preview-wrap" style="display:none"></div>
         </div>
       </div>
-      <p style="font-size:12px;color:var(--ink-faint);margin-bottom:16px">DNB Nettbank → velg konto → Last ned → CSV. Gjør dette for alle tre kontoene.</p>
 
-      <!-- Discord toggle -->
-      <div class="card" style="margin-bottom:20px">
-        <div class="discord-toggle">
-          <button class="toggle-switch" id="discordToggle" onclick="toggleDiscord()">
-            <div class="toggle-knob"></div>
-          </button>
-          <span style="font-size:14px;font-weight:500">Send rapport til Discord</span>
-          <span id="discordStatus" style="font-size:12px;color:var(--ink-faint)">Av</span>
+      <p style="font-size:11px;color:var(--ink-faint);margin-bottom:18px">DNB Nettbank → velg konto → Last ned. Gjør dette for alle tre kontoene.</p>
+
+      <div class="card" style="margin-bottom:16px">
+        <div class="toggle-row">
+          <button class="toggle" id="discordToggle" onclick="toggleDiscord()"><div class="toggle-knob"></div></button>
+          <div>
+            <span style="font-weight:500">Send rapport til Discord</span>
+            <span id="discordStatus" style="color:var(--ink-faint);font-size:12px;margin-left:6px">Av</span>
+          </div>
         </div>
-        <p style="font-size:13px;color:var(--ink-muted)">Hvis aktivert vil rapporten også postes til din Discord-kanal via webhook.</p>
       </div>
 
-      <button class="btn btn-primary" id="analyzeBtn" onclick="startAnalysis()" style="width:100%;justify-content:center;padding:14px">
+      <button class="btn btn-primary" id="analyzeBtn" onclick="startAnalysis()" style="width:100%;justify-content:center;padding:13px;font-size:15px">
         Kjør analyse
       </button>
-      <p style="text-align:center;font-size:12px;color:var(--ink-faint);margin-top:12px">Analysen tar ca. 20–40 sekunder</p>
-
-      <button class="btn btn-secondary" onclick="goToSetup()" style="margin-top:12px;width:100%;justify-content:center;font-size:13px">← Endre Worker-innstillinger</button>
+      <p style="text-align:center;font-size:11px;color:var(--ink-faint);margin-top:10px">Analysen tar ca. 15–30 sekunder</p>
+      <button class="btn" onclick="goToSetup()" style="margin-top:10px;width:100%;justify-content:center;font-size:12px">← Endre Worker-innstillinger</button>
     </div>
   </div>
 
@@ -497,13 +319,13 @@
     <div class="loader-wrap">
       <div class="loader-ring"></div>
       <div>
-        <p style="font-size:18px;font-family:'Cormorant Garamond',serif;text-align:center;margin-bottom:16px">Analyserer økonomi...</p>
+        <p style="font-size:20px;font-family:'Cormorant Garamond',serif;text-align:center;margin-bottom:14px">Analyserer økonomi...</p>
         <ul class="loader-steps" id="loader-steps">
-          <li id="step-market">Henter markedsdata og renter</li>
-          <li id="step-analyse">Analyserer transaksjoner</li>
-          <li id="step-kategori">Kategoriserer utgifter</li>
-          <li id="step-anbefaling">Genererer anbefalinger</li>
-          <li id="step-discord">Sender til Discord</li>
+          <li id="s1">Leser transaksjoner</li>
+          <li id="s2">Kategoriserer utgifter</li>
+          <li id="s3">Beregner sparerate og prognose</li>
+          <li id="s4">Genererer anbefalinger</li>
+          <li id="s5">Klargjør rapport</li>
         </ul>
       </div>
     </div>
@@ -512,28 +334,76 @@
   <!-- ══ DASHBOARD ══ -->
   <div id="app-dashboard">
     <div class="top-actions">
-      <span id="dashWeekLabel" style="font-size:13px;color:var(--ink-muted)"></span>
-      <button class="btn btn-secondary" onclick="goToUpload()" style="font-size:13px">Ny rapport</button>
-      <button class="btn btn-gold" onclick="sendDiscordManual()" style="font-size:13px" id="discordBtn">Send til Discord</button>
+      <div class="top-actions-left">
+        <span id="dashWeekLabel" style="font-size:13px;color:var(--ink-muted)"></span>
+        <span id="dashTimestamp" style="font-size:11px;color:var(--ink-faint)"></span>
+      </div>
+      <div class="top-actions-right">
+        <button class="btn btn-sm" onclick="goToUpload()">Ny rapport</button>
+        <button class="btn btn-sm" onclick="exportPDF()">↓ PDF</button>
+        <button class="btn btn-gold btn-sm" id="discordBtn" onclick="sendDiscordNow()">Discord</button>
+      </div>
     </div>
 
     <div id="warning-area"></div>
 
-    <!-- Økonomi -->
-    <div class="card">
-      <div class="card-header">
-        <h2>Økonomi</h2>
-        <span id="prognose-pill"></span>
+    <!-- Hero: Sparerate + Cashflow -->
+    <div class="hero" id="hero-section">
+      <div class="card donut-wrap" style="margin-bottom:0">
+        <div class="card-title" style="text-align:center">Sparerate</div>
+        <div class="donut-center">
+          <canvas id="donutChart" width="160" height="160" role="img" aria-label="Sparerate donut chart"></canvas>
+          <div class="donut-label">
+            <span class="donut-pct" id="donutPct">—</span>
+            <span class="donut-sub">av lønn</span>
+          </div>
+        </div>
+        <div style="margin-top:12px;text-align:center">
+          <div style="font-size:11px;color:var(--ink-muted)">Til sparekonto</div>
+          <div style="font-size:18px;font-family:'Cormorant Garamond',serif" id="heroTilSpare">—</div>
+        </div>
       </div>
-      <p class="analyse-tekst" id="okonomi-analyse"></p>
+      <div class="card" style="margin-bottom:0">
+        <div class="card-title">Pengeflyten denne perioden</div>
+        <div class="cashflow" id="cashflow-viz">
+          <div class="cf-node cf-jobb"><div class="cf-label">Jobbkonto</div><div class="cf-amount" id="cf-jobb">—</div></div>
+          <div class="cf-arrow">→</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div class="cf-node cf-bruk"><div class="cf-label">Brukskonto</div><div class="cf-amount" id="cf-bruk">—</div></div>
+            <div class="cf-node cf-spare"><div class="cf-label">Sparekonto</div><div class="cf-amount" id="cf-spare">—</div></div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="stat-grid" id="hero-stats"></div>
+      </div>
+    </div>
+
+    <!-- Økonomi analyse -->
+    <div class="card" id="okonomi-card">
+      <div class="card-title">Økonomianalyse</div>
+      <p class="analyse-txt" id="okonomi-analyse"></p>
       <div class="stat-grid" id="okonomi-stats"></div>
     </div>
 
-    <!-- Månedsprognose + Uke-over-uke -->
+    <!-- Kategoribudsjett som diagram -->
+    <div class="card" id="kategori-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="card-title" style="margin-bottom:0">Kategoribudsjett</div>
+        <span id="kategori-status-pill"></span>
+      </div>
+      <div class="chart-wrap" style="height:220px" id="kategori-chart-wrap">
+        <canvas id="kategoriChart" role="img" aria-label="Kategoribudsjett diagram"></canvas>
+      </div>
+    </div>
+
+    <!-- Prognose + Uke-over-uke -->
     <div class="grid-2">
       <div class="card">
-        <div class="card-title">Månedsprognose</div>
-        <p style="font-size:14px;color:var(--ink-muted);margin-bottom:16px;line-height:1.7" id="prognose-tekst"></p>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div class="card-title" style="margin-bottom:0">Månedsprognose</div>
+          <span id="prognose-pill"></span>
+        </div>
+        <p style="font-size:13px;color:var(--ink-muted);line-height:1.7;margin-bottom:14px" id="prognose-tekst"></p>
         <div class="stat-grid" id="prognose-stats" style="grid-template-columns:1fr 1fr"></div>
       </div>
       <div class="card">
@@ -542,10 +412,38 @@
       </div>
     </div>
 
-    <!-- Kategoribudsjett -->
-    <div class="card" id="kategori-card">
-      <div class="card-title">Kategoribudsjett</div>
-      <div id="kategori-content"></div>
+    <!-- Portefølje trend -->
+    <div class="card" id="pf-trend-card" style="display:none">
+      <div class="card-title">Porteføljeverdi over tid</div>
+      <div class="chart-wrap" style="height:180px">
+        <canvas id="trendChart" role="img" aria-label="Portefølje trendlinje"></canvas>
+      </div>
+    </div>
+
+    <!-- Portefølje + BSU/Skatt -->
+    <div class="grid-2" id="pf-grid">
+      <div class="card">
+        <div class="card-title">Portefølje</div>
+        <p class="analyse-txt" id="pf-analyse"></p>
+        <table class="pf-table">
+          <thead><tr><th>Verdipapir</th><th>Verdi</th><th>Uke</th></tr></thead>
+          <tbody id="pf-body"></tbody>
+        </table>
+        <div style="margin-top:14px;display:flex;gap:16px;flex-wrap:wrap">
+          <div><div style="font-size:11px;color:var(--ink-muted)">Total</div><div id="pf-total" style="font-size:22px;font-family:'Cormorant Garamond',serif"></div></div>
+          <div><div style="font-size:11px;color:var(--ink-muted)">Ukesendring</div><div id="pf-uke" style="font-size:22px;font-family:'Cormorant Garamond',serif"></div></div>
+        </div>
+      </div>
+      <div>
+        <div class="card" id="bsu-card" style="margin-bottom:18px">
+          <div class="card-title">BSU</div>
+          <div id="bsu-content"></div>
+        </div>
+        <div class="card" id="skatt-card">
+          <div class="card-title">Skatt & ASK</div>
+          <div id="skatt-content"></div>
+        </div>
+      </div>
     </div>
 
     <!-- Sparemål -->
@@ -554,425 +452,704 @@
       <div id="sparemal-content"></div>
     </div>
 
-    <!-- Portefølje + Skatt -->
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-title">Portefølje</div>
-        <p class="analyse-tekst" id="pf-analyse"></p>
-        <table class="portfolio-table" id="pf-table">
-          <thead><tr><th>Verdipapir</th><th>Verdi</th><th>Uke</th></tr></thead>
-          <tbody id="pf-body"></tbody>
-        </table>
-        <div style="margin-top:16px;display:flex;gap:12px;flex-wrap:wrap">
-          <div><span style="font-size:12px;color:var(--ink-muted)">Total</span><br><span id="pf-total" style="font-size:20px;font-family:'Cormorant Garamond',serif"></span></div>
-          <div><span style="font-size:12px;color:var(--ink-muted)">Ukesendring</span><br><span id="pf-uke" style="font-size:20px;font-family:'Cormorant Garamond',serif"></span></div>
-        </div>
-      </div>
-      <div>
-        <div class="card" style="margin-bottom:20px">
-          <div class="card-title">BSU</div>
-          <div id="bsu-content"></div>
-        </div>
-        <div class="card">
-          <div class="card-title">Skatt & ASK</div>
-          <div id="skatt-content"></div>
-        </div>
-      </div>
-    </div>
-
     <!-- Faste utgifter -->
-    <div class="card">
-      <div class="card-header" style="margin-bottom:12px">
-        <h2 style="font-size:20px">Faste utgifter</h2>
+    <div class="card" id="faste-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <h2 style="font-size:20px;font-weight:500">Faste utgifter</h2>
+        <span id="faste-nye"></span>
       </div>
-      <p class="analyse-tekst" id="faste-analyse"></p>
-      <ul class="expense-list" id="faste-list"></ul>
+      <p class="analyse-txt" id="faste-analyse"></p>
+      <ul class="exp-list" id="faste-list"></ul>
     </div>
 
     <!-- Markedsdata -->
-    <div class="card">
+    <div class="card" id="market-card" style="display:none">
       <div class="card-title">Markedsoversikt</div>
       <div class="market-box" id="market-tekst"></div>
-      <p style="font-size:11px;color:var(--ink-faint);margin-top:8px">Hentet via web search — ikke finansiell rådgivning</p>
+      <p style="font-size:10px;color:var(--ink-faint);margin-top:6px">Web search — ikke finansiell rådgivning</p>
     </div>
 
     <!-- Anbefalinger -->
-    <div class="card">
-      <div class="card-header">
-        <h2>Prioriterte anbefalinger</h2>
-      </div>
+    <div class="card" id="anbefaling-card">
+      <div class="card-title">Prioriterte anbefalinger</div>
       <div id="anbefalinger-content"></div>
     </div>
   </div>
 </div>
 
-<footer>Sparingsagent — Drevet av Claude AI &nbsp;·&nbsp; Ikke finansiell rådgivning</footer>
+<!-- Config panel -->
+<div class="config-overlay" id="configOverlay" onclick="closeConfig()"></div>
+<div class="config-panel" id="configPanel">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
+    <h2 style="font-size:22px;font-weight:500">Innstillinger</h2>
+    <button class="btn btn-sm" onclick="closeConfig()">Lukk ✕</button>
+  </div>
+
+  <div class="config-section">
+    <h3>Økonomi</h3>
+    <div class="grid-2">
+      <div class="form-group"><label>Månedlig inntekt (kr)</label><input type="number" id="cfg-inntekt" placeholder="52000"></div>
+      <div class="form-group"><label>Husleie (kr/mnd)</label><input type="number" id="cfg-husleie" placeholder="12500"></div>
+    </div>
+    <div class="form-group"><label>Ønsket buffer brukskonto (kr)</label><input type="number" id="cfg-buffer" placeholder="15000"></div>
+  </div>
+
+  <div class="config-section">
+    <h3>BSU</h3>
+    <div class="toggle-row" style="margin-bottom:12px">
+      <button class="toggle" id="bsuToggle" onclick="toggleBsu()"><div class="toggle-knob"></div></button>
+      <span style="font-size:13px">BSU aktiv</span>
+    </div>
+    <div id="bsu-fields">
+      <div class="grid-2">
+        <div class="form-group"><label>BSU-saldo (kr)</label><input type="number" id="cfg-bsu-saldo" placeholder="85000"></div>
+        <div class="form-group"><label>Innskutt i år (kr)</label><input type="number" id="cfg-bsu-innskudd" placeholder="5000"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="config-section">
+    <h3>Sparemål</h3>
+    <div id="goals-list"></div>
+    <button class="btn btn-sm" onclick="addGoal()">+ Legg til mål</button>
+  </div>
+
+  <div class="config-section">
+    <h3>Kategoribudsjett (kr/mnd)</h3>
+    <div class="grid-2">
+      <div class="form-group"><label>Mat/dagligvare</label><input type="number" id="cfg-mat" placeholder="5000"></div>
+      <div class="form-group"><label>Restaurant/takeaway</label><input type="number" id="cfg-restaurant" placeholder="2000"></div>
+      <div class="form-group"><label>Transport</label><input type="number" id="cfg-transport" placeholder="1500"></div>
+      <div class="form-group"><label>Abonnementer</label><input type="number" id="cfg-abonnement" placeholder="1200"></div>
+      <div class="form-group"><label>Shopping/klær</label><input type="number" id="cfg-shopping" placeholder="2000"></div>
+      <div class="form-group"><label>Helse/apotek</label><input type="number" id="cfg-helse" placeholder="500"></div>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" onclick="saveConfig()" style="width:100%;justify-content:center">Lagre innstillinger</button>
+  <p style="font-size:11px;color:var(--ink-faint);text-align:center;margin-top:8px">Lagres lokalt i nettleseren</p>
+</div>
+
+<footer>Sparingsagent — Drevet av Claude AI · Ikke finansiell rådgivning</footer>
 
 <script>
-// ── State ──────────────────────────────────────────────────────────────────
-let state = {
+// ══ State ══════════════════════════════════════════════════════════════════
+let S = {
   workerUrl: localStorage.getItem('workerUrl') || '',
   agentSecret: localStorage.getItem('agentSecret') || '',
-  jobbCsv: null,
-  dnbCsv: null,
-  spareCsv: null,
-  nordnetCsv: null,
+  jobbCsv: null, dnbCsv: null, spareCsv: null, nordnetCsv: null,
   sendDiscord: false,
   lastData: null,
+  dark: localStorage.getItem('dark') === '1',
 };
 
-// ── Init ───────────────────────────────────────────────────────────────────
-document.getElementById('workerUrl').value = state.workerUrl;
-document.getElementById('agentSecret').value = state.agentSecret;
+let charts = {};
 
-if (state.workerUrl) goToUpload();
+// ══ Init ═══════════════════════════════════════════════════════════════════
+document.getElementById('workerUrl').value = S.workerUrl;
+document.getElementById('agentSecret').value = S.agentSecret;
+if (S.dark) { document.documentElement.setAttribute('data-theme','dark'); document.getElementById('darkBtn').textContent='☀️'; }
+if (S.workerUrl) goToUpload(); else showOnly('app-setup');
 
-// ── Navigation ─────────────────────────────────────────────────────────────
+// ══ Navigation ══════════════════════════════════════════════════════════════
 function showOnly(id) {
-  ['app-setup','app-upload','app-loading','app-dashboard'].forEach(s => {
-    document.getElementById(s).classList.toggle('active', s === id);
-  });
+  ['app-setup','app-upload','app-loading','app-dashboard'].forEach(s =>
+    document.getElementById(s).classList.toggle('active', s===id));
 }
-
 function goToSetup() { showOnly('app-setup'); }
-
 function goToUpload() {
   const url = document.getElementById('workerUrl').value.trim();
-  const secret = document.getElementById('agentSecret').value.trim();
+  const sec = document.getElementById('agentSecret').value.trim();
   if (!url) { alert('Skriv inn Worker URL'); return; }
-  state.workerUrl = url;
-  state.agentSecret = secret;
-  localStorage.setItem('workerUrl', url);
-  localStorage.setItem('agentSecret', secret);
+  S.workerUrl = url; S.agentSecret = sec;
+  localStorage.setItem('workerUrl', url); localStorage.setItem('agentSecret', sec);
+  loadConfigToForm();
   showOnly('app-upload');
 }
 
-// ── File loading ───────────────────────────────────────────────────────────
-function loadFile(type, input) {
+// ══ Dark mode ═══════════════════════════════════════════════════════════════
+function toggleDark() {
+  S.dark = !S.dark;
+  document.documentElement.setAttribute('data-theme', S.dark ? 'dark' : 'light');
+  document.getElementById('darkBtn').textContent = S.dark ? '☀️' : '🌙';
+  localStorage.setItem('dark', S.dark ? '1' : '0');
+  rebuildCharts();
+}
+
+// ══ Excel / CSV parsing ═════════════════════════════════════════════════════
+function triggerFile(id) { document.getElementById(id).click(); }
+
+async function loadFile(type, input) {
   const file = input.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const zoneId = { jobb: 'zone-jobb', dnb: 'zone-dnb', spare: 'zone-spare', nordnet: 'zone-nordnet' }[type];
-    const zone = document.getElementById(zoneId);
-    if (type === 'jobb') state.jobbCsv = e.target.result;
-    else if (type === 'dnb') state.dnbCsv = e.target.result;
-    else if (type === 'spare') state.spareCsv = e.target.result;
-    else state.nordnetCsv = e.target.result;
-    zone.classList.add('loaded');
-    zone.querySelector('.upload-name').textContent = file.name;
-    zone.querySelector('.upload-desc').textContent = `${(file.size/1024).toFixed(1)} KB lastet`;
-  };
-  reader.readAsText(file, 'UTF-8');
-}
+  const isXlsx = file.name.match(/\.xlsx?$/i);
+  let csvText;
 
-// ── Drag & drop ────────────────────────────────────────────────────────────
-['zone-jobb','zone-dnb','zone-spare','zone-nordnet'].forEach(id => {
-  const zone = document.getElementById(id);
-  if (!zone) return;
-  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
-  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-  zone.addEventListener('drop', e => {
-    e.preventDefault();
-    zone.classList.remove('drag-over');
-    const file = e.dataTransfer.files[0];
-    if (!file) return;
-    const typeMap = { 'zone-jobb': 'jobb', 'zone-dnb': 'dnb', 'zone-spare': 'spare', 'zone-nordnet': 'nordnet' };
-    loadFile(typeMap[id], { files: [file] });
-  });
-});
+  if (isXlsx) {
+    try {
+      csvText = await excelToCsv(file);
+    } catch(e) {
+      markZone(type, 'error', file.name, 'Kunne ikke lese Excel-fil: ' + e.message);
+      return;
+    }
+  } else {
+    csvText = await readText(file);
+  }
 
-// ── Discord toggle ─────────────────────────────────────────────────────────
-function toggleDiscord() {
-  state.sendDiscord = !state.sendDiscord;
-  const btn = document.getElementById('discordToggle');
-  btn.classList.toggle('on', state.sendDiscord);
-  document.getElementById('discordStatus').textContent = state.sendDiscord ? 'På' : 'Av';
-}
-
-// ── Loader steps ───────────────────────────────────────────────────────────
-let loaderInterval;
-function startLoaderAnimation() {
-  const steps = ['step-market','step-analyse','step-kategori','step-anbefaling','step-discord'];
-  let i = 0;
-  steps.forEach(s => document.getElementById(s).className = '');
-  document.getElementById(steps[0]).className = 'active';
-  loaderInterval = setInterval(() => {
-    document.getElementById(steps[i]).className = 'done';
-    i++;
-    if (i < steps.length) document.getElementById(steps[i]).className = 'active';
-    else clearInterval(loaderInterval);
-  }, 7000);
-}
-
-// ── Analysis ───────────────────────────────────────────────────────────────
-async function startAnalysis() {
-  if (!state.jobbCsv || !state.dnbCsv || !state.spareCsv) {
-    alert('Last opp CSV fra alle tre kontoene (jobbkonto, brukskonto og sparekonto) før du kjører analysen.');
+  if (!csvText || csvText.trim().split('\n').length < 2) {
+    markZone(type, 'error', file.name, 'Filen ser tom ut eller har feil format');
     return;
   }
 
-  showOnly('app-loading');
-  startLoaderAnimation();
+  if (type === 'jobb') S.jobbCsv = csvText;
+  else if (type === 'dnb') S.dnbCsv = csvText;
+  else if (type === 'spare') S.spareCsv = csvText;
+  else S.nordnetCsv = csvText;
 
+  const lines = csvText.trim().split('\n');
+  markZone(type, 'loaded', file.name, `${lines.length - 1} transaksjoner · ${(file.size/1024).toFixed(1)} KB`);
+  showPreview(type, lines);
+}
+
+function excelToCsv(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const csv = XLSX.utils.sheet_to_csv(ws, { FS: ';' });
+        resolve(csv);
+      } catch(err) { reject(err); }
+    };
+    reader.onerror = () => reject(new Error('Lesefeil'));
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function readText(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = e => resolve(e.target.result);
+    r.onerror = () => reject(new Error('Lesefeil'));
+    r.readAsText(file, 'UTF-8');
+  });
+}
+
+function markZone(type, state, name, desc) {
+  const zoneMap = { jobb:'zone-jobb', dnb:'zone-dnb', spare:'zone-spare', nordnet:'zone-nordnet' };
+  const z = document.getElementById(zoneMap[type]);
+  if (!z) return;
+  z.className = 'upload-zone ' + state;
+  document.getElementById('name-' + type).textContent = name;
+  document.getElementById('desc-' + type).textContent = desc;
+}
+
+function showPreview(type, lines) {
+  const previewId = 'preview-' + type;
+  const el = document.getElementById(previewId);
+  if (!el) return;
+  const headers = lines[0].split(/[;,\t]/);
+  const rows = lines.slice(1, 6).map(l => l.split(/[;,\t]/));
+  let html = '<table class="preview-table"><thead><tr>' +
+    headers.slice(0, 5).map(h => `<th>${h.replace(/"/g,'')}</th>`).join('') +
+    '</tr></thead><tbody>' +
+    rows.map(r => '<tr>' + r.slice(0,5).map(c => `<td>${c.replace(/"/g,'')}</td>`).join('') + '</tr>').join('') +
+    '</tbody></table>';
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+
+// Drag and drop
+['jobb','dnb','spare'].forEach(type => {
+  const z = document.getElementById('zone-' + type);
+  z.addEventListener('dragover', e => { e.preventDefault(); z.classList.add('drag-over'); });
+  z.addEventListener('dragleave', () => z.classList.remove('drag-over'));
+  z.addEventListener('drop', e => {
+    e.preventDefault(); z.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f) loadFile(type, { files: [f] });
+  });
+});
+
+// ══ Discord toggle ═══════════════════════════════════════════════════════════
+function toggleDiscord() {
+  S.sendDiscord = !S.sendDiscord;
+  const b = document.getElementById('discordToggle');
+  b.classList.toggle('on', S.sendDiscord);
+  document.getElementById('discordStatus').textContent = S.sendDiscord ? 'På' : 'Av';
+}
+
+// ══ Config editor ════════════════════════════════════════════════════════════
+function openConfig() {
+  document.getElementById('configOverlay').classList.add('open');
+  document.getElementById('configPanel').classList.add('open');
+}
+function closeConfig() {
+  document.getElementById('configOverlay').classList.remove('open');
+  document.getElementById('configPanel').classList.remove('open');
+}
+
+let bsuAktiv = false;
+function toggleBsu() {
+  bsuAktiv = !bsuAktiv;
+  document.getElementById('bsuToggle').classList.toggle('on', bsuAktiv);
+  document.getElementById('bsu-fields').style.display = bsuAktiv ? 'block' : 'none';
+}
+
+let goals = [];
+function addGoal(g) {
+  const id = Date.now();
+  goals.push({ id, navn: g?.navn||'', mål: g?.mål||'', saldo: g?.saldo||'', innen: g?.innen||'' });
+  renderGoals();
+}
+function removeGoal(id) { goals = goals.filter(g => g.id !== id); renderGoals(); }
+function renderGoals() {
+  document.getElementById('goals-list').innerHTML = goals.map(g => `
+    <div class="goal-row">
+      <div class="form-group"><label style="font-size:10px">Navn</label><input type="text" value="${g.navn}" onchange="goals.find(x=>x.id==${g.id}).navn=this.value" placeholder="Japan-ferie"></div>
+      <div class="form-group"><label style="font-size:10px">Mål (kr)</label><input type="number" value="${g.mål}" onchange="goals.find(x=>x.id==${g.id}).mål=this.value" placeholder="40000"></div>
+      <div class="form-group"><label style="font-size:10px">Saldo (kr)</label><input type="number" value="${g.saldo}" onchange="goals.find(x=>x.id==${g.id}).saldo=this.value" placeholder="12000"></div>
+      <button class="btn btn-sm" onclick="removeGoal(${g.id})" style="color:var(--rose);flex-shrink:0">✕</button>
+    </div>
+  `).join('');
+}
+
+function loadConfigToForm() {
+  const cfg = JSON.parse(localStorage.getItem('sparingConfig') || '{}');
+  if (cfg.månedlig_inntekt_estimat) document.getElementById('cfg-inntekt').value = cfg.månedlig_inntekt_estimat;
+  if (cfg.månedlig_husleie) document.getElementById('cfg-husleie').value = cfg.månedlig_husleie;
+  if (cfg.ønsket_buffer_brukskonto) document.getElementById('cfg-buffer').value = cfg.ønsket_buffer_brukskonto;
+  const bsu = cfg.bsu || {};
+  bsuAktiv = !!bsu.aktiv;
+  document.getElementById('bsuToggle').classList.toggle('on', bsuAktiv);
+  document.getElementById('bsu-fields').style.display = bsuAktiv ? 'block' : 'none';
+  if (bsu.saldo) document.getElementById('cfg-bsu-saldo').value = bsu.saldo;
+  if (bsu.inneværende_år_innskudd) document.getElementById('cfg-bsu-innskudd').value = bsu.inneværende_år_innskudd;
+  const bud = cfg.kategoribudsjett || {};
+  if (bud.mat_dagligvare) document.getElementById('cfg-mat').value = bud.mat_dagligvare;
+  if (bud.restaurant_takeaway) document.getElementById('cfg-restaurant').value = bud.restaurant_takeaway;
+  if (bud.transport) document.getElementById('cfg-transport').value = bud.transport;
+  if (bud.abonnementer) document.getElementById('cfg-abonnement').value = bud.abonnementer;
+  if (bud.klær_shopping) document.getElementById('cfg-shopping').value = bud.klær_shopping;
+  if (bud.helse_apotek) document.getElementById('cfg-helse').value = bud.helse_apotek;
+  goals = [];
+  (cfg.sparemål || []).forEach(m => addGoal({ navn: m.navn, mål: m.mål, saldo: m.saldo, innen: m.innen }));
+}
+
+function saveConfig() {
+  const cfg = {
+    månedlig_inntekt_estimat: +document.getElementById('cfg-inntekt').value || undefined,
+    månedlig_husleie: +document.getElementById('cfg-husleie').value || undefined,
+    ønsket_buffer_brukskonto: +document.getElementById('cfg-buffer').value || 15000,
+    bsu: {
+      aktiv: bsuAktiv,
+      saldo: +document.getElementById('cfg-bsu-saldo').value || 0,
+      maks_per_år: 27500,
+      inneværende_år_innskudd: +document.getElementById('cfg-bsu-innskudd').value || 0,
+    },
+    sparemål: goals.map(g => ({ navn: g.navn, mål: +g.mål, saldo: +g.saldo, innen: g.innen || null })),
+    kategoribudsjett: {
+      mat_dagligvare: +document.getElementById('cfg-mat').value || 5000,
+      restaurant_takeaway: +document.getElementById('cfg-restaurant').value || 2000,
+      transport: +document.getElementById('cfg-transport').value || 1500,
+      abonnementer: +document.getElementById('cfg-abonnement').value || 1200,
+      klær_shopping: +document.getElementById('cfg-shopping').value || 2000,
+      helse_apotek: +document.getElementById('cfg-helse').value || 500,
+    },
+    portefølje: { type: 'ASK' },
+  };
+  localStorage.setItem('sparingConfig', JSON.stringify(cfg));
+  closeConfig();
+  alert('Innstillinger lagret!');
+}
+
+// ══ Loader ═══════════════════════════════════════════════════════════════════
+let loaderInt;
+function startLoader() {
+  const steps = ['s1','s2','s3','s4','s5'];
+  steps.forEach(s => document.getElementById(s).className = '');
+  document.getElementById(steps[0]).className = 'active';
+  let i = 0;
+  loaderInt = setInterval(() => {
+    document.getElementById(steps[i]).className = 'done'; i++;
+    if (i < steps.length) document.getElementById(steps[i]).className = 'active';
+    else clearInterval(loaderInt);
+  }, 5000);
+}
+
+// ══ Analysis ═════════════════════════════════════════════════════════════════
+async function startAnalysis() {
+  if (!S.jobbCsv || !S.dnbCsv || !S.spareCsv) {
+    alert('Last opp CSV/Excel fra alle tre kontoene (jobbkonto, brukskonto og sparekonto).'); return;
+  }
+  showOnly('app-loading'); startLoader();
   const config = JSON.parse(localStorage.getItem('sparingConfig') || '{}');
   const lastWeek = JSON.parse(localStorage.getItem('lastWeek') || 'null');
   const portfolioHistory = localStorage.getItem('portfolioHistory') || null;
-
   const now = new Date();
   const weekNum = Math.ceil(((now - new Date(now.getFullYear(),0,1))/86400000 + new Date(now.getFullYear(),0,1).getDay()+1)/7);
-  const weekLabel = `Uke ${weekNum} — ${now.getFullYear()}`;
-
-  const payload = {
-    jobb_csv: state.jobbCsv,
-    dnb_csv: state.dnbCsv,
-    spare_csv: state.spareCsv,
-    nordnet_csv: state.nordnetCsv,
-    config,
-    last_week: lastWeek,
-    portfolio_history: portfolioHistory,
-    week_label: weekLabel,
-    preview_only: !state.sendDiscord,
-  };
 
   try {
     const headers = { 'Content-Type': 'application/json' };
-    if (state.agentSecret) headers['X-Agent-Secret'] = state.agentSecret;
-
-    const res = await fetch(state.workerUrl, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(payload),
+    if (S.agentSecret) headers['X-Agent-Secret'] = S.agentSecret;
+    const res = await fetch(S.workerUrl, {
+      method: 'POST', headers,
+      body: JSON.stringify({
+        jobb_csv: S.jobbCsv, dnb_csv: S.dnbCsv, spare_csv: S.spareCsv, nordnet_csv: S.nordnetCsv,
+        config, last_week: lastWeek, portfolio_history: portfolioHistory,
+        week_label: `Uke ${weekNum} — ${now.getFullYear()}`,
+        preview_only: !S.sendDiscord,
+      }),
     });
-
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(`Worker svarte ${res.status}: ${err}`);
-    }
-
+    if (!res.ok) throw new Error(`Worker svarte ${res.status}: ${await res.text()}`);
     const result = await res.json();
-    if (!result.success || !result.data) throw new Error('Ugyldig respons fra Worker');
-
-    clearInterval(loaderInterval);
-
-    // Lagre historikk
+    if (!result.success) throw new Error('Ugyldig respons fra Worker');
+    clearInterval(loaderInt);
+    S.lastData = result.data;
     localStorage.setItem('lastWeek', JSON.stringify(buildSnapshot(result.data)));
     updatePortfolioHistory(result.data);
-
-    state.lastData = result.data;
+    document.getElementById('dashWeekLabel').textContent = result.data.uke || `Uke ${weekNum}`;
+    document.getElementById('dashTimestamp').textContent = '· ' + now.toLocaleString('nb-NO', { hour:'2-digit', minute:'2-digit', day:'numeric', month:'short' });
     renderDashboard(result.data);
     showOnly('app-dashboard');
-
-  } catch (err) {
-    clearInterval(loaderInterval);
+  } catch(err) {
+    clearInterval(loaderInt);
     alert('Feil: ' + err.message);
     showOnly('app-upload');
   }
 }
 
-async function sendDiscordManual() {
-  if (!state.lastData) return;
+async function sendDiscordNow() {
+  if (!S.lastData || !S.jobbCsv) return;
   const btn = document.getElementById('discordBtn');
-  btn.textContent = 'Sender...';
-  btn.disabled = true;
-
+  btn.textContent = 'Sender...'; btn.disabled = true;
   try {
     const headers = { 'Content-Type': 'application/json' };
-    if (state.agentSecret) headers['X-Agent-Secret'] = state.agentSecret;
-    const payload = {
-      dnb_csv: state.dnbCsv || 'ingen',
-      config: JSON.parse(localStorage.getItem('sparingConfig') || '{}'),
-      preview_only: false,
-      // Sender cachen direkte — ikke re-analyser
-    };
-    // Enkelt: bare gjenbruk siste data og re-kall med send_discord=true
-    // Men for enkelhet sender vi bare en webhook-preview-melding
-    alert('Discord-posting krever at du kjører analysen med Discord-bryteren aktivert.');
-  } finally {
-    btn.textContent = 'Send til Discord';
-    btn.disabled = false;
+    if (S.agentSecret) headers['X-Agent-Secret'] = S.agentSecret;
+    await fetch(S.workerUrl, {
+      method: 'POST', headers,
+      body: JSON.stringify({
+        jobb_csv: S.jobbCsv, dnb_csv: S.dnbCsv, spare_csv: S.spareCsv,
+        config: JSON.parse(localStorage.getItem('sparingConfig') || '{}'),
+        preview_only: false,
+      }),
+    });
+    btn.textContent = 'Sendt ✓';
+    setTimeout(() => { btn.textContent = 'Discord'; btn.disabled = false; }, 2000);
+  } catch(e) {
+    alert('Discord-feil: ' + e.message);
+    btn.textContent = 'Discord'; btn.disabled = false;
   }
 }
 
-// ── History ────────────────────────────────────────────────────────────────
-function buildSnapshot(data) {
-  return {
-    uke: data.uke,
-    dato: new Date().toISOString(),
-    økonomi: {
-      inntekt_perioden: data.økonomi?.inntekt_perioden,
-      utgifter_perioden: data.økonomi?.utgifter_perioden,
-      netto_perioden: data.økonomi?.netto_perioden,
-      estimert_brukskonto_saldo: data.økonomi?.estimert_brukskonto_saldo,
-    },
-    portefølje: { total_verdi: data.portefølje?.total_verdi },
-    faste_utgifter: { oppdaget: data.faste_utgifter?.oppdaget },
+function exportPDF() { window.print(); }
+
+// ══ History ═══════════════════════════════════════════════════════════════════
+function buildSnapshot(d) {
+  const ok = d.okonomi || d.økonomi || {};
+  return { uke: d.uke, dato: new Date().toISOString(),
+    okonomi: { lonn_inn: ok.lonn_inn || ok.lønn_inn, forbruk: ok.forbruk || ok.reelt_forbruk_brukskonto, sparerate: ok.sparerate },
+    portefolje: { total: d.portefolje?.total_verdi || d.portefølje?.total_verdi },
+    faste: d.faste || d.faste_utgifter?.oppdaget,
   };
 }
-
-function updatePortfolioHistory(data) {
-  const verdi = data.portefølje?.total_verdi;
-  if (!verdi) return;
-  const existing = localStorage.getItem('portfolioHistory') || 'dato;verdi_tekst;uke\n';
+function updatePortfolioHistory(d) {
+  const pf = d.portefolje || d.portefølje || {};
+  if (!pf.total_verdi) return;
+  const existing = localStorage.getItem('portfolioHistory') || 'dato;verdi;uke\n';
   const today = new Date().toISOString().split('T')[0];
-  localStorage.setItem('portfolioHistory', existing + `${today};${verdi};${data.uke || ''}\n`);
+  localStorage.setItem('portfolioHistory', existing + `${today};${pf.total_verdi};${d.uke||''}\n`);
 }
 
-// ── Render dashboard ───────────────────────────────────────────────────────
+// ══ Charts ════════════════════════════════════════════════════════════════════
+function isDark() { return document.documentElement.getAttribute('data-theme') === 'dark'; }
+function getColor(name) {
+  const s = getComputedStyle(document.documentElement);
+  return s.getPropertyValue('--' + name).trim();
+}
+
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+function buildDonut(pct) {
+  destroyChart('donut');
+  const el = document.getElementById('donutChart');
+  const dark = isDark();
+  const filled = Math.min(Math.max(pct, 0), 100);
+  charts.donut = new Chart(el, {
+    type: 'doughnut',
+    data: {
+      datasets: [{
+        data: [filled, 100 - filled],
+        backgroundColor: [filled > 20 ? '#4A7A4A' : '#A04040', dark ? '#2E2A25' : '#EDE7DC'],
+        borderWidth: 0, borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: false, cutout: '72%',
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      animation: { duration: 800 }
+    }
+  });
+}
+
+function buildKategoriChart(kategorier) {
+  destroyChart('kategori');
+  if (!kategorier || !kategorier.length) return;
+  const wrap = document.getElementById('kategori-chart-wrap');
+  const h = Math.max(kategorier.length * 38 + 60, 180);
+  wrap.style.height = h + 'px';
+  const dark = isDark();
+  const labels = kategorier.map(k => k.navn);
+  const faktisk = kategorier.map(k => {
+    const v = k.brukt ? parseInt(k.brukt.replace(/\D/g,'')) : 0;
+    return isNaN(v) ? 0 : v;
+  });
+  const budsjett = kategorier.map(k => {
+    const v = k.budsjett ? parseInt(k.budsjett.replace(/\D/g,'')) : 0;
+    return isNaN(v) ? 0 : v;
+  });
+  charts.kategori = new Chart(document.getElementById('kategoriChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Faktisk', data: faktisk, backgroundColor: kategorier.map(k => k.status === 'over' ? '#A04040' : k.status === 'advarsel' ? '#B8720A' : '#4A7A4A'), borderRadius: 4, barPercentage: 0.5 },
+        { label: 'Budsjett', data: budsjett, backgroundColor: dark ? 'rgba(240,235,227,0.1)' : 'rgba(44,40,37,0.08)', borderRadius: 4, barPercentage: 0.5 }
+      ]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' ' + ctx.raw.toLocaleString('nb-NO') + ' kr' } } },
+      scales: {
+        x: { grid: { color: dark ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.05)' }, ticks: { color: dark ? '#A89F99' : '#6B6460', font: { size: 11 }, callback: v => v.toLocaleString('nb-NO') } },
+        y: { grid: { display: false }, ticks: { color: dark ? '#F0EBE3' : '#2C2825', font: { size: 12 } } }
+      }
+    }
+  });
+}
+
+function buildTrendChart(historyStr) {
+  destroyChart('trend');
+  if (!historyStr) return;
+  const lines = historyStr.trim().split('\n').filter(Boolean);
+  if (lines.length < 3) return;
+  const rows = lines.slice(1).map(l => { const p = l.split(';'); return { dato: p[0], label: p[0]?.slice(5) }; }).filter(r => r.dato);
+  const verdier = lines.slice(1).map(l => {
+    const p = l.split(';');
+    const raw = p[1]?.replace(/[^\d]/g,'');
+    return raw ? parseInt(raw) : null;
+  }).filter(v => v !== null);
+  if (verdier.length < 2) return;
+  document.getElementById('pf-trend-card').style.display = 'block';
+  const dark = isDark();
+  charts.trend = new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: {
+      labels: rows.map(r => r.label),
+      datasets: [{ label: 'Porteføljeverdi', data: verdier, borderColor: '#B8924A', backgroundColor: 'rgba(184,146,74,.1)', tension: 0.3, pointRadius: 3, pointBackgroundColor: '#B8924A', fill: true }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' ' + ctx.raw.toLocaleString('nb-NO') + ' kr' } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: dark ? '#A89F99' : '#6B6460', font: { size: 11 } } },
+        y: { grid: { color: dark ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.05)' }, ticks: { color: dark ? '#A89F99' : '#6B6460', font: { size: 11 }, callback: v => (v/1000).toFixed(0) + 'k' } }
+      }
+    }
+  });
+}
+
+function rebuildCharts() {
+  if (!S.lastData) return;
+  const d = S.lastData;
+  const ok = d.okonomi || d.økonomi || {};
+  const pct = parseInt(ok.sparerate) || 0;
+  buildDonut(pct);
+  buildKategoriChart(d.kategorier);
+  buildTrendChart(localStorage.getItem('portfolioHistory'));
+}
+
+// ══ Render dashboard ══════════════════════════════════════════════════════════
 function renderDashboard(d) {
-  document.getElementById('dashWeekLabel').textContent = d.uke || '';
+  const ok = d.okonomi || d.økonomi || {};
+  const prog = d.prognose || d.månedsprognose || {};
+  const advarsel = d.advarsel || d.sparekonto_advarsel;
 
-  // Warning — støtter begge JSON-strukturer
-  const wa = document.getElementById('warning-area');
-  const advarselTekst = d.advarsel || d.sparekonto_advarsel;
-  wa.innerHTML = advarselTekst ? `<div class="warning-banner">⚠️ ${advarselTekst}</div>` : '';
+  // Warning
+  document.getElementById('warning-area').innerHTML = advarsel
+    ? `<div class="warning-banner">⚠️ ${advarsel}</div>` : '';
 
-  // Økonomi — ny struktur: d.okonomi, gammel: d.økonomi
-  const øk = d.okonomi || d.økonomi || {};
-  document.getElementById('okonomi-analyse').textContent = øk.analyse || '';
+  // Sparerate donut
+  const sparerateTxt = ok.sparerate || '0%';
+  const sparePct = parseInt(sparerateTxt) || 0;
+  document.getElementById('donutPct').textContent = sparerateTxt;
+  buildDonut(sparePct);
 
-  // Prognose — ny: d.prognose, gammel: d.månedsprognose
-  const prog = d.prognose || d.månedsprognose;
-  const progStatus = prog?.status || '';
-  const progPillMap = {
-    paa_kurs: ['pill-ok','På kurs'], på_kurs: ['pill-ok','På kurs'],
-    over_budsjett: ['pill-over','Over budsjett'],
-    under_budsjett: ['pill-warn','Under budsjett']
-  };
-  const [pillCls, pillTxt] = progPillMap[progStatus] || ['pill-info','—'];
-  document.getElementById('prognose-pill').innerHTML = prog ? `<span class="pill ${pillCls}">${pillTxt}</span>` : '';
+  // Cashflow
+  document.getElementById('cf-jobb').textContent = ok.jobbkonto_saldo || ok.estimert_jobbkonto_saldo || '—';
+  document.getElementById('cf-bruk').textContent = ok.til_brukskonto || ok.overført_til_brukskonto || '—';
+  document.getElementById('cf-spare').textContent = ok.til_sparekonto || ok.overført_til_sparekonto || '—';
+  document.getElementById('heroTilSpare').textContent = ok.til_sparekonto || ok.overført_til_sparekonto || '—';
 
-  // Økonomi stats — håndterer begge feltnavn-varianter
+  // Hero stats
+  document.getElementById('hero-stats').innerHTML = [
+    { label: 'Lønn inn', value: ok.lonn_inn || ok.lønn_inn },
+    { label: 'Reelt forbruk', value: ok.forbruk || ok.reelt_forbruk_brukskonto },
+    { label: 'Anbefalt sparing', value: ok.anbefalt_sparing || ok.anbefalt_til_sparing, cls: 'highlight-gold' },
+  ].map(s => `<div class="stat ${s.cls||''}"><div class="stat-label">${s.label}</div><div class="stat-value">${s.value||'—'}</div></div>`).join('');
+
+  // Økonomi
+  document.getElementById('okonomi-analyse').textContent = ok.analyse || '';
+  const buffer = JSON.parse(localStorage.getItem('sparingConfig') || '{}').ønsket_buffer_brukskonto || 15000;
   document.getElementById('okonomi-stats').innerHTML = [
-    { label: 'Jobbkonto (est.)',        value: øk.jobbkonto_saldo || øk.estimert_jobbkonto_saldo },
-    { label: 'Brukskonto (est.)',        value: øk.brukskonto_saldo || øk.estimert_brukskonto_saldo },
-    { label: 'Sparekonto (est.)',        value: øk.sparekonto_saldo || øk.estimert_sparekonto_saldo },
-    { label: 'Lønn inn',                value: øk.lonn_inn || øk.lønn_inn },
-    { label: 'Overført til brukskonto', value: øk.til_brukskonto || øk.overført_til_brukskonto },
-    { label: 'Overført til sparekonto', value: øk.til_sparekonto || øk.overført_til_sparekonto, cls: 'positive' },
-    { label: 'Sparerate',               value: øk.sparerate, cls: 'positive' },
-    { label: 'Reelt forbruk',           value: øk.forbruk || øk.reelt_forbruk_brukskonto },
-    { label: 'Anbefalt til sparing',    value: øk.anbefalt_sparing || øk.anbefalt_til_sparing, cls: 'gold' },
-  ].map(s => `<div class="stat"><div class="stat-label">${s.label}</div><div class="stat-value ${s.cls||''}">${s.value || '—'}</div></div>`).join('');
+    { label: 'Jobbkonto', value: ok.jobbkonto_saldo || ok.estimert_jobbkonto_saldo },
+    { label: 'Brukskonto', value: ok.brukskonto_saldo || ok.estimert_brukskonto_saldo },
+    { label: 'Sparekonto', value: ok.sparekonto_saldo || ok.estimert_sparekonto_saldo, cls: 'pos' },
+    { label: 'Til brukskonto', value: ok.til_brukskonto || ok.overført_til_brukskonto },
+    { label: 'Til sparekonto', value: ok.til_sparekonto || ok.overført_til_sparekonto, cls: 'pos' },
+    { label: 'Netto', value: ok.netto_perioden },
+  ].map(s => `<div class="stat"><div class="stat-label">${s.label}</div><div class="stat-value ${s.cls||''}">${s.value||'—'}</div></div>`).join('');
 
-  // Månedsprognose
-  const progTekst = prog?.tekst || prog?.beskrivelse || '—';
-  document.getElementById('prognose-tekst').textContent = progTekst;
+  // Kategoribudsjett
+  const kategorier = d.kategorier || [];
+  buildKategoriChart(kategorier);
+  const overKat = kategorier.filter(k => k.status === 'over').length;
+  document.getElementById('kategori-status-pill').innerHTML = overKat
+    ? `<span class="pill pill-over">${overKat} over budsjett</span>` : '<span class="pill pill-ok">Alt innenfor</span>';
+  if (!kategorier.length) document.getElementById('kategori-card').style.display = 'none';
+
+  // Prognose
+  const ps = prog.status || '';
+  const pm = { paa_kurs:'pill-ok',på_kurs:'pill-ok', over_budsjett:'pill-over', under_budsjett:'pill-warn' };
+  const pt = { paa_kurs:'På kurs',på_kurs:'På kurs', over_budsjett:'Over budsjett', under_budsjett:'Under budsjett' };
+  document.getElementById('prognose-pill').innerHTML = ps ? `<span class="pill ${pm[ps]||'pill-info'}">${pt[ps]||ps}</span>` : '';
+  document.getElementById('prognose-tekst').textContent = prog.tekst || prog.beskrivelse || '—';
   document.getElementById('prognose-stats').innerHTML = [
-    { label: 'Estimert totalt', value: prog?.total || prog?.estimert_totalforbruk },
-    { label: 'Daglig snitt',    value: prog?.daglig || prog?.daglig_snittforbruk },
+    { label: 'Estimert totalt', value: prog.total || prog.estimert_totalforbruk },
+    { label: 'Daglig snitt', value: prog.daglig || prog.daglig_snittforbruk },
   ].map(s => `<div class="stat"><div class="stat-label">${s.label}</div><div class="stat-value">${s.value||'—'}</div></div>`).join('');
 
   // Uke-over-uke
   const uou = d.uke_over_uke;
   document.getElementById('uou-content').innerHTML = uou?.tilgjengelig ? `
-    <div class="compare-row"><span style="color:var(--ink-muted)">Inntektsendring</span><span style="font-weight:500">${uou.inntekt_endring||'—'}</span></div>
-    <div class="compare-row"><span style="color:var(--ink-muted)">Utgiftsendring</span><span style="font-weight:500">${uou.utgifter_endring||'—'}</span></div>
-    <div style="margin-top:14px;font-size:13px;color:var(--ink-muted);line-height:1.6">${uou.største_endring||uou.storste_endring||''}</div>
-  ` : '<p style="font-size:14px;color:var(--ink-faint);font-style:italic">Ingen historikk ennå — tilgjengelig fra neste rapport.</p>';
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border-soft)">
+        <span style="font-size:13px;color:var(--ink-muted)">Inntektsendring</span>
+        <span style="font-weight:500;font-size:14px">${uou.inntekt_endring||'—'}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border-soft)">
+        <span style="font-size:13px;color:var(--ink-muted)">Utgiftsendring</span>
+        <span style="font-weight:500;font-size:14px">${uou.utgifter_endring||'—'}</span>
+      </div>
+      <p style="font-size:13px;color:var(--ink-muted);line-height:1.6;margin-top:4px">${uou.største_endring||uou.storste_endring||''}</p>
+    </div>
+  ` : '<p style="font-size:13px;color:var(--ink-faint);font-style:italic">Tilgjengelig fra neste rapport.</p>';
 
-  // Kategoribudsjett
-  const kategorier = d.kategorier || [];
-  const katColorMap = { ok: 'sage', advarsel: 'amber', over: 'rose' };
-  document.getElementById('kategori-content').innerHTML = kategorier.length ? kategorier.map(k => {
-    const pillCls = k.status === 'ok' ? 'ok' : k.status === 'advarsel' ? 'warn' : 'over';
-    return `
-    <div class="progress-wrap">
-      <div class="progress-label">
-        <span style="font-size:14px">${k.navn}</span>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span class="pill pill-${pillCls}">${k.brukt}</span>
-          <span style="font-size:12px;color:var(--ink-faint)">/ ${k.budsjett}</span>
-        </div>
-      </div>
-      <div class="progress-track"><div class="progress-fill ${katColorMap[k.status]||'sage'}" style="width:${Math.min(k.prosent||0,100)}%"></div></div>
-    </div>`;
-  }).join('') : '<p style="font-size:14px;color:var(--ink-faint);font-style:italic">Ingen budsjettdata tilgjengelig.</p>';
-
-  // Sparemål
-  const mål = d.sparemål || d.sparemal || [];
-  const målColorMap = { på_kurs: 'sage', paa_kurs: 'sage', bak_skjema: 'amber', ingen_frist: 'gold' };
-  document.getElementById('sparemal-content').innerHTML = mål.length ? mål.map(m => {
-    const st = m.status || '';
-    const pillCls = (st==='på_kurs'||st==='paa_kurs') ? 'ok' : st==='bak_skjema' ? 'warn' : 'info';
-    return `
-    <div style="margin-bottom:20px">
-      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
-        <span style="font-size:15px;font-weight:500">${m.navn}</span>
-        <span class="pill pill-${pillCls}">${m.prosent||0}%</span>
-      </div>
-      <div class="progress-track"><div class="progress-fill ${målColorMap[st]||'sage'}" style="width:${Math.min(m.prosent||0,100)}%"></div></div>
-      <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:13px;color:var(--ink-muted)">
-        <span>${m.nåværende||m.naavaerende||'—'} av ${m.mål||m.maal||'—'}</span>
-        <span>Gjenstår: ${m.gjenstår||m.gjenstar||'—'}${m.måneder_til_mål||m.maaneder_til_maal ? ` · ${m.måneder_til_mål||m.maaneder_til_maal} mnd` : ''}</span>
-      </div>
-      <div style="font-size:13px;color:var(--ink-faint);margin-top:4px">Anbefalt: <strong style="color:var(--ink)">${m.anbefalt_månedlig||m.anbefalt_maanedlig||'—'}</strong></div>
-    </div>`;
-  }).join('') : '<p style="font-size:14px;color:var(--ink-faint);font-style:italic">Ingen sparemål definert i config.json.</p>';
+  // Portfolio trend
+  buildTrendChart(localStorage.getItem('portfolioHistory'));
 
   // Portefølje
   const pf = d.portefolje || d.portefølje || {};
-  document.getElementById('pf-analyse').textContent = pf.analyse || '';
-  document.getElementById('pf-total').textContent = pf.total_verdi || '—';
-  const ukeEnd = pf.uke_endring || '—';
-  const ukeEl = document.getElementById('pf-uke');
-  ukeEl.textContent = ukeEnd;
-  ukeEl.className = ukeEnd.startsWith('+') ? 'positive' : ukeEnd.startsWith('-') ? 'negative' : '';
-  ukeEl.style.cssText = 'font-size:20px;font-family:"Cormorant Garamond",serif';
-  const beholdninger = pf.beholdninger || [];
-  document.getElementById('pf-body').innerHTML = beholdninger.length ? beholdninger.map(b => {
-    const up = (b.endring_uke||'').startsWith('+');
-    return `<tr><td>${b.navn}</td><td style="font-family:'Cormorant Garamond',serif;font-size:16px">${b.verdi}</td><td class="change ${up?'up':'down'}">${b.endring_uke}</td></tr>`;
-  }).join('') : '<tr><td colspan="3" style="color:var(--ink-faint);font-style:italic">Ingen porteføljedata</td></tr>';
+  const hasPf = !!(pf.total_verdi || (pf.beholdninger && pf.beholdninger.length));
+  document.getElementById('pf-grid').style.display = hasPf ? 'grid' : 'none';
+  if (hasPf) {
+    document.getElementById('pf-analyse').textContent = pf.analyse || '';
+    document.getElementById('pf-total').textContent = pf.total_verdi || '—';
+    const ukeE = pf.uke_endring || '—';
+    const el = document.getElementById('pf-uke');
+    el.textContent = ukeE;
+    el.style.color = ukeE.startsWith('+') ? 'var(--sage)' : ukeE.startsWith('-') ? 'var(--rose)' : 'var(--ink)';
+    document.getElementById('pf-body').innerHTML = (pf.beholdninger||[]).map(b =>
+      `<tr><td>${b.navn}</td><td style="font-family:'Cormorant Garamond',serif;font-size:16px">${b.verdi}</td><td class="change ${(b.endring_uke||'').startsWith('+')?'up':'down'}">${b.endring_uke}</td></tr>`
+    ).join('') || '<tr><td colspan="3" style="color:var(--ink-faint);font-style:italic;font-size:13px">Ingen porteføljedata</td></tr>';
+  }
 
   // BSU
   const bsu = d.bsu || {};
-  document.getElementById('bsu-content').innerHTML = bsu.aktiv ? `
-    <div class="stat-grid" style="grid-template-columns:1fr 1fr;margin-bottom:12px">
-      <div class="stat"><div class="stat-label">Gjenstående kvote</div><div class="stat-value gold">${bsu.gjenstående_kvote_i_år||bsu.gjenstaende_kvote_i_aar||'—'}</div></div>
-      <div class="stat"><div class="stat-label">Mulig skattefradrag</div><div class="stat-value positive">${bsu.potensiell_skattefradrag||'—'}</div></div>
-    </div>
-    <p style="font-size:13px;color:var(--ink-muted);line-height:1.6">${bsu.anbefaling||''}</p>
-  ` : '<p style="font-size:14px;color:var(--ink-faint);font-style:italic">BSU ikke aktivt.</p>';
+  const bsuCard = document.getElementById('bsu-card');
+  if (bsu.aktiv) {
+    const kvote = bsu.gjenstående_kvote_i_år || bsu.gjenstaende_kvote_i_aar || '—';
+    document.getElementById('bsu-content').innerHTML = `
+      <div class="stat-grid" style="grid-template-columns:1fr 1fr;margin-bottom:10px">
+        <div class="stat highlight-gold"><div class="stat-label">Gjenstående kvote</div><div class="stat-value gold">${kvote}</div></div>
+        <div class="stat highlight-pos"><div class="stat-label">Mulig skattefradrag</div><div class="stat-value pos">${bsu.potensiell_skattefradrag||'—'}</div></div>
+      </div>
+      <p style="font-size:13px;color:var(--ink-muted);line-height:1.6">${bsu.anbefaling||''}</p>`;
+  } else { bsuCard.style.display = 'none'; }
 
   // Skatt
   const skatt = d.skatt || {};
-  document.getElementById('skatt-content').innerHTML = `
-    <div class="stat-grid" style="grid-template-columns:1fr 1fr;margin-bottom:12px">
-      <div class="stat"><div class="stat-label">Urealisert gevinst</div><div class="stat-value">${skatt.urealisert_gevinst||'—'}</div></div>
-      <div class="stat"><div class="stat-label">Est. skatt ved salg</div><div class="stat-value">${skatt.estimert_skatt_ved_salg||'—'}</div></div>
-    </div>
-    <p style="font-size:13px;color:var(--ink-muted);line-height:1.6">${skatt.ask_fordel||''}</p>
-  `;
+  const skattCard = document.getElementById('skatt-card');
+  if (skatt.urealisert_gevinst) {
+    document.getElementById('skatt-content').innerHTML = `
+      <div class="stat-grid" style="grid-template-columns:1fr 1fr;margin-bottom:10px">
+        <div class="stat"><div class="stat-label">Urealisert gevinst</div><div class="stat-value">${skatt.urealisert_gevinst}</div></div>
+        <div class="stat"><div class="stat-label">Est. skatt ved salg</div><div class="stat-value">${skatt.estimert_skatt_ved_salg||'—'}</div></div>
+      </div>
+      <p style="font-size:13px;color:var(--ink-muted);line-height:1.6">${skatt.ask_fordel||''}</p>`;
+  } else { skattCard.style.display = 'none'; }
 
-  // Faste utgifter — ny: d.faste (array), gammel: d.faste_utgifter (objekt)
+  // Sparemål
+  const mål = d.sparemål || d.sparemal || [];
+  const målCard = document.getElementById('sparemal-card');
+  if (mål.length) {
+    const cm = { på_kurs:'sage', paa_kurs:'sage', bak_skjema:'amber', ingen_frist:'gold' };
+    const cp = { på_kurs:'pill-ok', paa_kurs:'pill-ok', bak_skjema:'pill-warn', ingen_frist:'pill-info' };
+    document.getElementById('sparemal-content').innerHTML = mål.map(m => {
+      const st = m.status||''; const pct = m.prosent||0;
+      return `
+      <div style="margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--border-soft)">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+          <span style="font-size:15px;font-weight:500">${m.navn}</span>
+          <span class="pill ${cp[st]||'pill-info'}">${pct}%</span>
+        </div>
+        <div class="prog-track"><div class="prog-fill ${cm[st]||'sage'}" style="width:${Math.min(pct,100)}%"></div></div>
+        <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:12px;color:var(--ink-muted)">
+          <span>${m.nåværende||m.naavaerende||'—'} av ${m.mål||m.maal||'—'}</span>
+          <span>Anbefalt: <strong style="color:var(--ink)">${m.anbefalt_månedlig||m.anbefalt_maanedlig||'—'}/mnd</strong></span>
+        </div>
+      </div>`;
+    }).join('');
+  } else { målCard.style.display = 'none'; }
+
+  // Faste utgifter
   const fasteArr = Array.isArray(d.faste) ? d.faste : null;
   const fasteObj = d.faste_utgifter || {};
+  const nyeFaste = fasteObj.nye_siden_sist || [];
   document.getElementById('faste-analyse').textContent = fasteObj.analyse || '';
+  document.getElementById('faste-nye').innerHTML = nyeFaste.length
+    ? `<span class="pill pill-warn">${nyeFaste.length} nye oppdaget</span>` : '';
   if (fasteArr && fasteArr.length) {
     document.getElementById('faste-list').innerHTML = fasteArr.map(f =>
-      `<li><span>${f.navn}</span><span class="amount">${f.belop || ''}</span></li>`
+      `<li><span>${f.navn}</span><span style="font-family:'Cormorant Garamond',serif;font-size:16px">${f.belop||''}</span></li>`
     ).join('');
+  } else if (fasteObj.oppdaget && fasteObj.oppdaget.length) {
+    document.getElementById('faste-list').innerHTML = fasteObj.oppdaget.map(e =>
+      `<li><span>${e}</span></li>`).join('');
   } else {
-    document.getElementById('faste-list').innerHTML = (fasteObj.oppdaget||[]).map(e =>
-      `<li><span>${e}</span><span class="amount"></span></li>`
-    ).join('') || '<li style="color:var(--ink-faint);font-style:italic">Ingen faste utgifter oppdaget</li>';
+    document.getElementById('faste-card').style.display = 'none';
   }
 
   // Markedsdata
-  document.getElementById('market-tekst').textContent = d.markedsdata?.sammendrag || 'Ingen markedsdata tilgjengelig.';
+  const mktEl = document.getElementById('market-card');
+  const mkt = d.markedsdata?.sammendrag;
+  if (mkt && !mkt.includes('ikke tilgjengelig')) {
+    document.getElementById('market-tekst').textContent = mkt;
+    mktEl.style.display = 'block';
+  }
 
-  // Anbefalinger — ny: {tittel, tekst}, gammel: {tittel, beskrivelse, emoji}
+  // Anbefalinger
   const anb = d.anbefalinger || [];
-  document.getElementById('anbefalinger-content').innerHTML = anb.map((a, i) => `
-    <div class="rec">
-      <div class="rec-num">${i+1}</div>
-      <div>
-        <div class="rec-title">${a.emoji||''} ${a.tittel}</div>
-        <div class="rec-desc">${a.tekst || a.beskrivelse || ''}</div>
-      </div>
-    </div>
-  `).join('') || '<p style="color:var(--ink-faint);font-style:italic">Ingen anbefalinger.</p>';
+  document.getElementById('anbefalinger-content').innerHTML = anb.length
+    ? anb.map((a,i) => `
+      <div class="rec">
+        <div class="rec-num">${i+1}</div>
+        <div><div class="rec-title">${a.emoji||''} ${a.tittel}</div>
+        <div class="rec-desc">${a.tekst||a.beskrivelse||''}</div></div>
+      </div>`).join('')
+    : '<p style="color:var(--ink-faint);font-style:italic;font-size:13px">Ingen anbefalinger.</p>';
 }
 </script>
 </body>
