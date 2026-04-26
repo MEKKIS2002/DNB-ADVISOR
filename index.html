@@ -918,11 +918,11 @@ function buildKategoriChart(kategorier) {
   const dark = isDark();
   const labels = kategorier.map(k => k.navn);
   const faktisk = kategorier.map(k => {
-    const v = k.brukt ? parseInt(k.brukt.replace(/\D/g,'')) : 0;
+    const v = parseInt(String(k.brukt || 0).replace(/\D/g,''));
     return isNaN(v) ? 0 : v;
   });
   const budsjett = kategorier.map(k => {
-    const v = k.budsjett ? parseInt(k.budsjett.replace(/\D/g,'')) : 0;
+    const v = parseInt(String(k.budsjett || 0).replace(/\D/g,''));
     return isNaN(v) ? 0 : v;
   });
   charts.kategori = new Chart(document.getElementById('kategoriChart'), {
