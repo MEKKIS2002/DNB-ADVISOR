@@ -1,0 +1,85 @@
+name: Ukentlig Sparingsrapport
+
+on:
+  schedule:
+    # Mandag kl. 07:00 UTC = 08:00 CET / 09:00 CEST
+    - cron: "0 7 * * 1"
+
+  workflow_dispatch:
+    inputs:
+      grunn:
+        description: "Grunn til manuell kjøring"
+        required: false
+        default: "Manuell test"
+
+jobs:
+  sparing-rapport:
+    name: Generer og send ukentlig sparingsrapport
+    runs-on: ubuntu-latest
+
+    # Tillatelse til å skrive tilbake til repo (for historikkfiler)
+    permissions:
+      contents: write
+
+    steps:
+      - name: Sjekk ut kode
+        uses: actions/checkout@v4
+        with:
+          # Fetch med token slik at vi kan pushe tilbake
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Sett opp Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Verifiser DNB CSV
+        run: |
+          if [ ! -f "data/dnb_transactions.csv" ]; then
+            echo "❌ FEIL: data/dnb_transactions.csv mangler!"
+            echo "Last ned CSV fra DNB Nettbank og commit den til /data-mappen."
+            exit 1
+          fi
+          LINJER=$(wc -l < data/dnb_transactions.csv)
+          echo "✅ DNB CSV funnet ($LINJER linjer)"
+
+      - name: Sjekk Nordnet CSV
+        run: |
+          if [ -f "data/nordnet_portfolio.csv" ]; then
+            echo "✅ Nordnet CSV funnet ($(wc -l < data/nordnet_portfolio.csv) linjer)"
+          else
+            echo "ℹ️  Ingen nordnet_portfolio.csv — porteføljeanalyse hoppes over"
+          fi
+
+      - name: Sjekk config.json
+        run: |
+          if [ -f "config.json" ]; then
+            echo "✅ config.json funnet"
+          else
+            echo "⚠️  Ingen config.json — bruker standardverdier"
+          fi
+
+      - name: Kjør sparingsagent
+        env:
+          WORKER_URL: ${{ secrets.WORKER_URL }}
+          AGENT_SECRET: ${{ secrets.AGENT_SECRET }}
+        run: node agent.js
+
+      - name: Commit historikkfiler tilbake til repo
+        run: |
+          git config --local user.email "sparingsagent@github-actions"
+          git config --local user.name "Sparingsagent"
+
+          # Legg til historikkfiler hvis de finnes
+          git add data/history/last_week.json || true
+          git add data/history/portfolio_history.csv || true
+
+          # Commit kun hvis det er endringer
+          if git diff --staged --quiet; then
+            echo "ℹ️  Ingen endringer i historikkfiler — ingenting å committe"
+          else
+            DATO=$(date +"%Y-%m-%d")
+            git commit -m "📊 Sparingsrapport oppdatert — $DATO [skip ci]"
+            git push
+            echo "✅ Historikkfiler pushet til repo"
+          fi

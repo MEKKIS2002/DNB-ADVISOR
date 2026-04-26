@@ -1,0 +1,13 @@
+{
+  "name": "sparing-agent",
+  "version": "1.0.0",
+  "description": "Ukentlig sparings- og investeringsagent med Claude AI",
+  "type": "module",
+  "scripts": {
+    "start": "node agent.js",
+    "test": "node agent.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

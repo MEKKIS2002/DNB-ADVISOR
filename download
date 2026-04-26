@@ -1,0 +1,15 @@
+node_modules/
+
+# Aldri commit ekte CSV-filer med faktiske transaksjoner
+# (de sample-filene i /data er kun eksempler med dummy-data)
+# Hvis du vil, kan du legge disse til .gitignore:
+# data/dnb_transactions.csv
+# data/nordnet_portfolio.csv
+
+# Miljøvariabler
+.env
+.env.local
+
+# OS-filer
+.DS_Store
+Thumbs.db

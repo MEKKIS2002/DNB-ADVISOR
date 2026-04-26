@@ -1,0 +1,47 @@
+{
+  "bsu": {
+    "aktiv": true,
+    "kommentar": "Sett 'aktiv' til false hvis du er over 33 år eller ikke har BSU",
+    "saldo": 85000,
+    "maks_per_år": 27500,
+    "inneværende_år_innskudd": 5000
+  },
+
+  "sparemål": [
+    {
+      "id": "japan_ferie",
+      "navn": "Japan-ferie 🇯🇵",
+      "mål": 40000,
+      "innen": "2026-09-01",
+      "saldo": 12000
+    },
+    {
+      "id": "nødfond",
+      "navn": "Nødfond (3 mnd utgifter)",
+      "mål": 60000,
+      "innen": null,
+      "saldo": 45000
+    }
+  ],
+
+  "kategoribudsjett": {
+    "kommentar": "Månedlige grenser i NOK per kategori. Claude kategoriserer transaksjoner automatisk.",
+    "mat_dagligvare": 5000,
+    "restaurant_takeaway": 2000,
+    "transport": 1500,
+    "abonnementer": 1200,
+    "underholdning": 1000,
+    "helse_apotek": 500,
+    "klær_shopping": 2000
+  },
+
+  "portefølje": {
+    "type": "ASK",
+    "kommentar": "ASK = Aksjesparekonto, VPS = Verdipapirregister. Brukes til skatteberegning."
+  },
+
+  "månedlig_inntekt_estimat": 52000,
+  "månedlig_husleie": 12500,
+  "ønsket_buffer_brukskonto": 15000,
+  "kommentar_buffer": "Minste saldo du vil ha på brukskonto til enhver tid"
+}
