@@ -311,6 +311,15 @@ footer{text-align:center;padding:40px 0 20px;font-size:11px;color:var(--ink-fain
       </button>
       <p style="text-align:center;font-size:11px;color:var(--ink-faint);margin-top:10px">Analysen tar ca. 15–30 sekunder</p>
       <button class="btn" onclick="goToSetup()" style="margin-top:10px;width:100%;justify-content:center;font-size:12px">← Endre Worker-innstillinger</button>
+
+      <!-- Lagrede rapporter -->
+      <div id="saved-reports-section" style="margin-top:28px;display:none">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <div class="section-label">Lagrede rapporter</div>
+          <div style="flex:1;height:1px;background:var(--border)"></div>
+        </div>
+        <div id="saved-reports-list"></div>
+      </div>
     </div>
   </div>
 
@@ -339,7 +348,7 @@ footer{text-align:center;padding:40px 0 20px;font-size:11px;color:var(--ink-fain
         <span id="dashTimestamp" style="font-size:11px;color:var(--ink-faint)"></span>
       </div>
       <div class="top-actions-right">
-        <button class="btn btn-sm" onclick="goToUpload()">Ny rapport</button>
+        <button class="btn btn-sm" onclick="goToUpload()">← Tilbake</button>
         <button class="btn btn-sm" onclick="exportPDF()">↓ PDF</button>
         <button class="btn btn-gold btn-sm" id="discordBtn" onclick="sendDiscordNow()">Discord</button>
       </div>
@@ -575,6 +584,7 @@ function goToUpload() {
     localStorage.setItem('workerUrl', url);
     localStorage.setItem('agentSecret', sec);
     try { loadConfigToForm(); } catch(e) { console.warn('Config load feil:', e); }
+    loadSavedReports();
     showOnly('app-upload');
   } catch(e) {
     console.error('goToUpload feil:', e);
@@ -825,6 +835,7 @@ async function startAnalysis() {
     S.lastData = result.data;
     localStorage.setItem('lastWeek', JSON.stringify(buildSnapshot(result.data)));
     updatePortfolioHistory(result.data);
+    saveReport(result.data);
     document.getElementById('dashWeekLabel').textContent = result.data.uke || `Uke ${weekNum}`;
     document.getElementById('dashTimestamp').textContent = '· ' + now.toLocaleString('nb-NO', { hour:'2-digit', minute:'2-digit', day:'numeric', month:'short' });
     renderDashboard(result.data);
@@ -866,6 +877,88 @@ async function sendDiscordNow() {
 }
 
 function exportPDF() { window.print(); }
+
+// ══ Rapport-lagring ═══════════════════════════════════════════════════════
+const MAX_SAVED_REPORTS = 8;
+
+function saveReport(data) {
+  try {
+    const key = 'report_' + new Date().toISOString().split('T')[0];
+    const entry = {
+      key,
+      uke: data.uke || '',
+      dato: new Date().toISOString(),
+      datoDisplay: new Date().toLocaleString('nb-NO', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }),
+      data,
+    };
+    localStorage.setItem(key, JSON.stringify(entry));
+
+    // Rydd opp gamle rapporter — behold kun MAX_SAVED_REPORTS
+    const allKeys = getAllReportKeys();
+    if (allKeys.length > MAX_SAVED_REPORTS) {
+      allKeys.slice(0, allKeys.length - MAX_SAVED_REPORTS)
+        .forEach(k => localStorage.removeItem(k));
+    }
+  } catch(e) {
+    console.warn('Kunne ikke lagre rapport:', e);
+  }
+}
+
+function getAllReportKeys() {
+  return Object.keys(localStorage)
+    .filter(k => k.startsWith('report_'))
+    .sort();
+}
+
+function loadSavedReports() {
+  const keys = getAllReportKeys();
+  const section = document.getElementById('saved-reports-section');
+  const list = document.getElementById('saved-reports-list');
+
+  if (!keys.length) {
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = 'block';
+  list.innerHTML = keys.reverse().map(key => {
+    try {
+      const entry = JSON.parse(localStorage.getItem(key));
+      if (!entry) return '';
+      return `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px">
+          <div>
+            <div style="font-size:14px;font-weight:500">${entry.uke || 'Ukjent uke'}</div>
+            <div style="font-size:12px;color:var(--ink-muted);margin-top:2px">${entry.datoDisplay || ''}</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-sm" onclick="loadReport('${key}')">Last inn</button>
+            <button class="btn btn-sm" onclick="deleteReport('${key}')" style="color:var(--rose);border-color:var(--rose)">✕</button>
+          </div>
+        </div>`;
+    } catch { return ''; }
+  }).join('');
+}
+
+function loadReport(key) {
+  try {
+    const entry = JSON.parse(localStorage.getItem(key));
+    if (!entry || !entry.data) { alert('Rapporten kunne ikke lastes.'); return; }
+    S.lastData = entry.data;
+    document.getElementById('dashWeekLabel').textContent = entry.uke || '';
+    document.getElementById('dashTimestamp').textContent = '· Lastet fra ' + (entry.datoDisplay || '');
+    renderDashboard(entry.data);
+    showOnly('app-dashboard');
+  } catch(e) {
+    alert('Feil ved lasting av rapport: ' + e.message);
+  }
+}
+
+function deleteReport(key) {
+  if (!confirm('Slette denne rapporten?')) return;
+  localStorage.removeItem(key);
+  loadSavedReports();
+}
 
 // ══ History ═══════════════════════════════════════════════════════════════════
 function buildSnapshot(d) {
