@@ -668,9 +668,9 @@ function showPreview(type, lines) {
   const headers = lines[0].split(/[;,\t]/);
   const rows = lines.slice(1, 6).map(l => l.split(/[;,\t]/));
   let html = '<table class="preview-table"><thead><tr>' +
-    headers.slice(0, 5).map(h => `<th>${h.replace(/"/g,'')}</th>`).join('') +
+    headers.slice(0, 4).map(h => `<th>${h.replace(/"/g,'').trim()}</th>`).join('') +
     '</tr></thead><tbody>' +
-    rows.map(r => '<tr>' + r.slice(0,5).map(c => `<td>${c.replace(/"/g,'')}</td>`).join('') + '</tr>').join('') +
+    rows.map(r => '<tr>' + r.slice(0,4).map(c => `<td>${(c||'').replace(/"/g,'').trim().slice(0,20)}</td>`).join('') + '</tr>').join('') +
     '</tbody></table>';
   el.innerHTML = html;
   el.style.display = 'block';
