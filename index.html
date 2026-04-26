@@ -241,7 +241,7 @@ footer{text-align:center;padding:40px 0 20px;font-size:11px;color:var(--ink-fain
         <div class="card-title">Cloudflare Worker</div>
         <div class="form-group">
           <label>Worker URL</label>
-          <input type="url" id="workerUrl" placeholder="https://sparing-agent.xxx.workers.dev">
+          <input type="text" id="workerUrl" placeholder="https://sparing-agent.xxx.workers.dev">
         </div>
         <div class="form-group">
           <label>Agent Secret <span style="font-weight:300;color:var(--ink-faint)">(valgfritt)</span></label>
@@ -631,9 +631,10 @@ function showOnly(id) {
 function goToSetup() { showOnly('app-setup'); }
 function goToUpload() {
   try {
-    const url = (document.getElementById('workerUrl').value || '').trim();
+    let url = (document.getElementById('workerUrl').value || '').trim();
     const sec = (document.getElementById('agentSecret').value || '').trim();
     if (!url) { alert('Skriv inn Worker URL'); return; }
+    if (!url.startsWith('http')) url = 'https://' + url;
     S.workerUrl = url;
     S.agentSecret = sec;
     localStorage.setItem('workerUrl', url);
