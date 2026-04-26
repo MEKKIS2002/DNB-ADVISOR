@@ -33,22 +33,28 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Verifiser DNB CSV
+      - name: Verifiser CSV-filer
         run: |
-          if [ ! -f "data/dnb_transactions.csv" ]; then
-            echo "❌ FEIL: data/dnb_transactions.csv mangler!"
-            echo "Last ned CSV fra DNB Nettbank og commit den til /data-mappen."
+          FEIL=0
+          for fil in data/jobbkonto.csv data/brukskonto.csv data/sparekonto.csv; do
+            if [ ! -f "$fil" ]; then
+              echo "❌ Mangler: $fil"
+              FEIL=1
+            else
+              echo "✅ Funnet: $fil ($(wc -l < $fil) linjer)"
+            fi
+          done
+          if [ $FEIL -eq 1 ]; then
+            echo "Last ned CSV fra DNB Nettbank for alle tre kontoene og commit til /data/"
             exit 1
           fi
-          LINJER=$(wc -l < data/dnb_transactions.csv)
-          echo "✅ DNB CSV funnet ($LINJER linjer)"
 
       - name: Sjekk Nordnet CSV
         run: |
           if [ -f "data/nordnet_portfolio.csv" ]; then
-            echo "✅ Nordnet CSV funnet ($(wc -l < data/nordnet_portfolio.csv) linjer)"
+            echo "✅ Nordnet CSV funnet"
           else
-            echo "ℹ️  Ingen nordnet_portfolio.csv — porteføljeanalyse hoppes over"
+            echo "ℹ️  Ingen nordnet_portfolio.csv — hoppes over"
           fi
 
       - name: Sjekk config.json
