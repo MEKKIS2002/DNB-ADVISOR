@@ -687,6 +687,8 @@ function loadQuickSaldo() {
   if (saldoer.spare)   document.getElementById('quick-saldo-spare').value   = saldoer.spare;
   if (saldoer.nordnet) document.getElementById('quick-saldo-nordnet').value = saldoer.nordnet;
 }
+
+function filterRecentCsv(csv, days = 60) {
   if (!csv) return csv;
   const lines = csv.trim().split('\n').filter(Boolean);
   if (lines.length < 2) return csv;
