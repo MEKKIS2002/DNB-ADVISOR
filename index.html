@@ -437,28 +437,39 @@
       <div class="section-title">Last opp transaksjoner</div>
       <p class="section-sub">Eksporter CSV fra DNB Nettbank og Nordnet, og last dem opp her.</p>
 
-      <div class="upload-grid">
+      <div class="upload-grid" style="grid-template-columns:1fr 1fr 1fr">
         <div>
-          <p style="font-size:13px;font-weight:500;margin-bottom:8px">DNB Transaksjoner <span style="color:var(--rose)">*</span></p>
+          <p style="font-size:13px;font-weight:500;margin-bottom:8px">Jobbkonto <span style="color:var(--rose)">*</span></p>
+          <div class="upload-zone" id="zone-jobb" onclick="document.getElementById('file-jobb').click()">
+            <input type="file" id="file-jobb" accept=".csv" style="display:none" onchange="loadFile('jobb', this)">
+            <div class="upload-icon">💼</div>
+            <div class="upload-name">jobbkonto.csv</div>
+            <div class="upload-desc">Klikk eller dra fil hit</div>
+          </div>
+          <p class="hint" style="margin-top:6px">Lønnskontoen — inntekter inn</p>
+        </div>
+        <div>
+          <p style="font-size:13px;font-weight:500;margin-bottom:8px">Brukskonto <span style="color:var(--rose)">*</span></p>
           <div class="upload-zone" id="zone-dnb" onclick="document.getElementById('file-dnb').click()">
             <input type="file" id="file-dnb" accept=".csv" style="display:none" onchange="loadFile('dnb', this)">
-            <div class="upload-icon">📄</div>
-            <div class="upload-name">dnb_transactions.csv</div>
+            <div class="upload-icon">💳</div>
+            <div class="upload-name">brukskonto.csv</div>
             <div class="upload-desc">Klikk eller dra fil hit</div>
           </div>
-          <p class="hint" style="margin-top:6px">DNB Nettbank → Konto → Last ned → CSV</p>
+          <p class="hint" style="margin-top:6px">Daglig forbruk og utgifter</p>
         </div>
         <div>
-          <p style="font-size:13px;font-weight:500;margin-bottom:8px">Nordnet Portefølje <span style="color:var(--ink-faint)">(valgfritt)</span></p>
-          <div class="upload-zone" id="zone-nordnet" onclick="document.getElementById('file-nordnet').click()">
-            <input type="file" id="file-nordnet" accept=".csv" style="display:none" onchange="loadFile('nordnet', this)">
-            <div class="upload-icon">📊</div>
-            <div class="upload-name">nordnet_portfolio.csv</div>
+          <p style="font-size:13px;font-weight:500;margin-bottom:8px">Sparekonto <span style="color:var(--rose)">*</span></p>
+          <div class="upload-zone" id="zone-spare" onclick="document.getElementById('file-spare').click()">
+            <input type="file" id="file-spare" accept=".csv" style="display:none" onchange="loadFile('spare', this)">
+            <div class="upload-icon">🏦</div>
+            <div class="upload-name">sparekonto.csv</div>
             <div class="upload-desc">Klikk eller dra fil hit</div>
           </div>
-          <p class="hint" style="margin-top:6px">Nordnet → Portefølje → Eksporter</p>
+          <p class="hint" style="margin-top:6px">Sparekontoen din</p>
         </div>
       </div>
+      <p style="font-size:12px;color:var(--ink-faint);margin-bottom:16px">DNB Nettbank → velg konto → Last ned → CSV. Gjør dette for alle tre kontoene.</p>
 
       <!-- Discord toggle -->
       <div class="card" style="margin-bottom:20px">
@@ -602,7 +613,9 @@
 let state = {
   workerUrl: localStorage.getItem('workerUrl') || '',
   agentSecret: localStorage.getItem('agentSecret') || '',
+  jobbCsv: null,
   dnbCsv: null,
+  spareCsv: null,
   nordnetCsv: null,
   sendDiscord: false,
   lastData: null,
@@ -640,26 +653,23 @@ function loadFile(type, input) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = e => {
-    if (type === 'dnb') {
-      state.dnbCsv = e.target.result;
-      const zone = document.getElementById('zone-dnb');
-      zone.classList.add('loaded');
-      zone.querySelector('.upload-name').textContent = file.name;
-      zone.querySelector('.upload-desc').textContent = `${(file.size/1024).toFixed(1)} KB lastet`;
-    } else {
-      state.nordnetCsv = e.target.result;
-      const zone = document.getElementById('zone-nordnet');
-      zone.classList.add('loaded');
-      zone.querySelector('.upload-name').textContent = file.name;
-      zone.querySelector('.upload-desc').textContent = `${(file.size/1024).toFixed(1)} KB lastet`;
-    }
+    const zoneId = { jobb: 'zone-jobb', dnb: 'zone-dnb', spare: 'zone-spare', nordnet: 'zone-nordnet' }[type];
+    const zone = document.getElementById(zoneId);
+    if (type === 'jobb') state.jobbCsv = e.target.result;
+    else if (type === 'dnb') state.dnbCsv = e.target.result;
+    else if (type === 'spare') state.spareCsv = e.target.result;
+    else state.nordnetCsv = e.target.result;
+    zone.classList.add('loaded');
+    zone.querySelector('.upload-name').textContent = file.name;
+    zone.querySelector('.upload-desc').textContent = `${(file.size/1024).toFixed(1)} KB lastet`;
   };
   reader.readAsText(file, 'UTF-8');
 }
 
 // ── Drag & drop ────────────────────────────────────────────────────────────
-['zone-dnb','zone-nordnet'].forEach(id => {
+['zone-jobb','zone-dnb','zone-spare','zone-nordnet'].forEach(id => {
   const zone = document.getElementById(id);
+  if (!zone) return;
   zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
   zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
   zone.addEventListener('drop', e => {
@@ -667,9 +677,8 @@ function loadFile(type, input) {
     zone.classList.remove('drag-over');
     const file = e.dataTransfer.files[0];
     if (!file) return;
-    const type = id === 'zone-dnb' ? 'dnb' : 'nordnet';
-    const fakeInput = { files: [file] };
-    loadFile(type, fakeInput);
+    const typeMap = { 'zone-jobb': 'jobb', 'zone-dnb': 'dnb', 'zone-spare': 'spare', 'zone-nordnet': 'nordnet' };
+    loadFile(typeMap[id], { files: [file] });
   });
 });
 
@@ -698,7 +707,10 @@ function startLoaderAnimation() {
 
 // ── Analysis ───────────────────────────────────────────────────────────────
 async function startAnalysis() {
-  if (!state.dnbCsv) { alert('Last opp DNB CSV-filen først.'); return; }
+  if (!state.jobbCsv || !state.dnbCsv || !state.spareCsv) {
+    alert('Last opp CSV fra alle tre kontoene (jobbkonto, brukskonto og sparekonto) før du kjører analysen.');
+    return;
+  }
 
   showOnly('app-loading');
   startLoaderAnimation();
@@ -712,9 +724,11 @@ async function startAnalysis() {
   const weekLabel = `Uke ${weekNum} — ${now.getFullYear()}`;
 
   const payload = {
+    jobb_csv: state.jobbCsv,
     dnb_csv: state.dnbCsv,
+    spare_csv: state.spareCsv,
     nordnet_csv: state.nordnetCsv,
-    config: config,
+    config,
     last_week: lastWeek,
     portfolio_history: portfolioHistory,
     week_label: weekLabel,
@@ -822,13 +836,15 @@ function renderDashboard(d) {
   document.getElementById('prognose-pill').innerHTML = prog ? `<span class="pill ${pillCls}">${pillTxt}</span>` : '';
 
   document.getElementById('okonomi-stats').innerHTML = [
+    { label: 'Jobbkonto (est.)', value: øk.estimert_jobbkonto_saldo, cls: '' },
     { label: 'Brukskonto (est.)', value: øk.estimert_brukskonto_saldo, cls: '' },
     { label: 'Sparekonto (est.)', value: øk.estimert_sparekonto_saldo, cls: '' },
-    { label: 'Inntekt denne perioden', value: øk.inntekt_perioden, cls: '' },
-    { label: 'Utgifter denne perioden', value: øk.utgifter_perioden, cls: '' },
-    { label: 'Netto', value: øk.netto_perioden, cls: (øk.netto_perioden||'').startsWith('+') ? 'positive' : 'negative' },
-    { label: 'Anbefalt til brukskonto', value: øk.anbefalt_til_brukskonto, cls: 'gold' },
-    { label: 'Anbefalt til sparing', value: øk.anbefalt_til_sparing, cls: 'positive' },
+    { label: 'Lønn inn', value: øk.lønn_inn, cls: '' },
+    { label: 'Overført til brukskonto', value: øk.overført_til_brukskonto, cls: '' },
+    { label: 'Overført til sparekonto', value: øk.overført_til_sparekonto, cls: 'positive' },
+    { label: 'Sparerate', value: øk.sparerate, cls: 'positive' },
+    { label: 'Reelt forbruk (brukskonto)', value: øk.reelt_forbruk_brukskonto, cls: '' },
+    { label: 'Anbefalt til sparing', value: øk.anbefalt_til_sparing, cls: 'gold' },
   ].map(s => `<div class="stat"><div class="stat-label">${s.label}</div><div class="stat-value ${s.cls}">${s.value || '—'}</div></div>`).join('');
 
   // Månedsprognose
