@@ -264,37 +264,64 @@ footer{text-align:center;padding:40px 0 20px;font-size:11px;color:var(--ink-fain
       <div class="grid-upload" style="margin-bottom:16px">
         <div>
           <p style="font-size:12px;font-weight:500;margin-bottom:7px">Jobbkonto <span style="color:var(--rose)">*</span></p>
-          <div class="upload-zone" id="zone-jobb" onclick="triggerFile('file-jobb')">
-            <input type="file" id="file-jobb" accept=".csv,.xlsx,.xls" style="display:none" onchange="loadFile('jobb',this)">
+          <label class="upload-zone" id="zone-jobb" for="file-jobb">
+            <input type="file" id="file-jobb" accept=".csv,.xlsx,.xls" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%" onchange="loadFile('jobb',this)">
             <div class="upload-icon">💼</div>
             <div class="upload-name" id="name-jobb">jobbkonto.xlsx</div>
             <div class="upload-desc" id="desc-jobb">Klikk eller dra hit</div>
-          </div>
+          </label>
           <div id="preview-jobb" class="preview-wrap" style="display:none"></div>
         </div>
         <div>
           <p style="font-size:12px;font-weight:500;margin-bottom:7px">Brukskonto <span style="color:var(--rose)">*</span></p>
-          <div class="upload-zone" id="zone-dnb" onclick="triggerFile('file-dnb')">
-            <input type="file" id="file-dnb" accept=".csv,.xlsx,.xls" style="display:none" onchange="loadFile('dnb',this)">
+          <label class="upload-zone" id="zone-dnb" for="file-dnb">
+            <input type="file" id="file-dnb" accept=".csv,.xlsx,.xls" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%" onchange="loadFile('dnb',this)">
             <div class="upload-icon">💳</div>
             <div class="upload-name" id="name-dnb">brukskonto.xlsx</div>
             <div class="upload-desc" id="desc-dnb">Klikk eller dra hit</div>
-          </div>
+          </label>
           <div id="preview-dnb" class="preview-wrap" style="display:none"></div>
         </div>
         <div>
           <p style="font-size:12px;font-weight:500;margin-bottom:7px">Sparekonto <span style="color:var(--rose)">*</span></p>
-          <div class="upload-zone" id="zone-spare" onclick="triggerFile('file-spare')">
-            <input type="file" id="file-spare" accept=".csv,.xlsx,.xls" style="display:none" onchange="loadFile('spare',this)">
+          <label class="upload-zone" id="zone-spare" for="file-spare">
+            <input type="file" id="file-spare" accept=".csv,.xlsx,.xls" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%" onchange="loadFile('spare',this)">
             <div class="upload-icon">🏦</div>
             <div class="upload-name" id="name-spare">sparekonto.xlsx</div>
             <div class="upload-desc" id="desc-spare">Klikk eller dra hit</div>
-          </div>
+          </label>
           <div id="preview-spare" class="preview-wrap" style="display:none"></div>
         </div>
       </div>
 
       <p style="font-size:11px;color:var(--ink-faint);margin-bottom:18px">DNB Nettbank → velg konto → Last ned. Gjør dette for alle tre kontoene.</p>
+
+      <!-- Rask saldo-innskriving -->
+      <div class="card" style="margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div class="card-title" style="margin-bottom:0">Kontosaldoer nå</div>
+          <span style="font-size:11px;color:var(--ink-faint)">Sjekk DNB og skriv inn</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px">
+          <div>
+            <label style="font-size:11px;color:var(--ink-muted);display:block;margin-bottom:4px">💼 Jobbkonto</label>
+            <input type="number" id="quick-saldo-jobb" placeholder="0" style="padding:8px 10px;font-size:13px" oninput="syncQuickSaldo()">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--ink-muted);display:block;margin-bottom:4px">💳 Brukskonto</label>
+            <input type="number" id="quick-saldo-bruk" placeholder="0" style="padding:8px 10px;font-size:13px" oninput="syncQuickSaldo()">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--ink-muted);display:block;margin-bottom:4px">🏦 Sparekonto</label>
+            <input type="number" id="quick-saldo-spare" placeholder="0" style="padding:8px 10px;font-size:13px" oninput="syncQuickSaldo()">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--ink-muted);display:block;margin-bottom:4px">📈 Nordnet</label>
+            <input type="number" id="quick-saldo-nordnet" placeholder="0" style="padding:8px 10px;font-size:13px" oninput="syncQuickSaldo()">
+          </div>
+        </div>
+        <p style="font-size:11px;color:var(--ink-faint);margin-top:8px">Lagres automatisk i innstillinger</p>
+      </div>
 
       <div class="card" style="margin-bottom:16px">
         <div class="toggle-row">
@@ -461,6 +488,21 @@ footer{text-align:center;padding:40px 0 20px;font-size:11px;color:var(--ink-fain
       <div id="sparemal-content"></div>
     </div>
 
+    <!-- Fond & investeringsanbefalinger -->
+    <div class="card" id="fond-card" style="display:none">
+      <div class="card-title">Fondanbefalinger</div>
+      <p class="analyse-txt" id="fond-sammendrag"></p>
+      <div id="fond-list" style="margin-bottom:16px"></div>
+      <div id="bitcoin-dca" style="font-size:13px;color:var(--ink-muted);border-top:1px solid var(--border-soft);padding-top:12px;line-height:1.7"></div>
+    </div>
+
+    <!-- Overføringsplan -->
+    <div class="card" id="overforing-card" style="display:none">
+      <div class="card-title">Anbefalt overføringsplan</div>
+      <div class="stat-grid" id="overforing-stats" style="margin-bottom:14px"></div>
+      <p style="font-size:13px;color:var(--ink-muted);line-height:1.7" id="overforing-begrunnelse"></p>
+    </div>
+
     <!-- Faste utgifter -->
     <div class="card" id="faste-card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -597,6 +639,7 @@ function goToUpload() {
     localStorage.setItem('workerUrl', url);
     localStorage.setItem('agentSecret', sec);
     try { loadConfigToForm(); } catch(e) { console.warn('Config load feil:', e); }
+    try { loadQuickSaldo(); } catch(e) {}
     loadSavedReports();
     showOnly('app-upload');
   } catch(e) {
@@ -615,7 +658,29 @@ function toggleDark() {
 }
 
 // ══ Excel / CSV parsing ═════════════════════════════════════════════════════
-function filterRecentCsv(csv, days = 60) {
+function syncQuickSaldo() {
+  const cfg = JSON.parse(localStorage.getItem('sparingConfig') || '{}');
+  cfg.saldoer = {
+    jobb:    +document.getElementById('quick-saldo-jobb').value    || null,
+    bruk:    +document.getElementById('quick-saldo-bruk').value    || null,
+    spare:   +document.getElementById('quick-saldo-spare').value   || null,
+    nordnet: +document.getElementById('quick-saldo-nordnet').value || null,
+  };
+  localStorage.setItem('sparingConfig', JSON.stringify(cfg));
+  // Sync til config-panelet også
+  if (cfg.saldoer.jobb)    document.getElementById('cfg-saldo-jobb').value    = cfg.saldoer.jobb;
+  if (cfg.saldoer.bruk)    document.getElementById('cfg-saldo-bruk').value    = cfg.saldoer.bruk;
+  if (cfg.saldoer.spare)   document.getElementById('cfg-saldo-spare').value   = cfg.saldoer.spare;
+  if (cfg.saldoer.nordnet) document.getElementById('cfg-saldo-nordnet').value = cfg.saldoer.nordnet;
+}
+
+function loadQuickSaldo() {
+  const saldoer = JSON.parse(localStorage.getItem('sparingConfig') || '{}').saldoer || {};
+  if (saldoer.jobb)    document.getElementById('quick-saldo-jobb').value    = saldoer.jobb;
+  if (saldoer.bruk)    document.getElementById('quick-saldo-bruk').value    = saldoer.bruk;
+  if (saldoer.spare)   document.getElementById('quick-saldo-spare').value   = saldoer.spare;
+  if (saldoer.nordnet) document.getElementById('quick-saldo-nordnet').value = saldoer.nordnet;
+}
   if (!csv) return csv;
   const lines = csv.trim().split('\n').filter(Boolean);
   if (lines.length < 2) return csv;
@@ -1180,13 +1245,47 @@ function renderDashboard(d) {
     { label: 'Netto', value: ok.netto_perioden },
   ].map(s => `<div class="stat"><div class="stat-label">${s.label}</div><div class="stat-value ${s.cls||''}">${s.value||'—'}</div></div>`).join('');
 
-  // Kategoribudsjett
+  // Kategoribudsjett — vis anbefalt maks
   const kategorier = d.kategorier || [];
   buildKategoriChart(kategorier);
   const overKat = kategorier.filter(k => k.status === 'over').length;
   document.getElementById('kategori-status-pill').innerHTML = overKat
     ? `<span class="pill pill-over">${overKat} over budsjett</span>` : '<span class="pill pill-ok">Alt innenfor</span>';
-  if (!kategorier.length) document.getElementById('kategori-card').style.display = 'none';
+  if (!kategorier.length) {
+    document.getElementById('kategori-card').style.display = 'none';
+  }
+
+  // Fondanbefalinger
+  const fond = d.fond_anbefaling;
+  const fondCard = document.getElementById('fond-card');
+  if (fond && (fond.sammendrag || fond.anbefalinger?.length)) {
+    fondCard.style.display = 'block';
+    document.getElementById('fond-sammendrag').textContent = fond.sammendrag || '';
+    document.getElementById('fond-list').innerHTML = (fond.anbefalinger || []).map(f => `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border-soft)">
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:500;margin-bottom:3px">${f.fond}</div>
+          <div style="font-size:13px;color:var(--ink-muted);line-height:1.5">${f.begrunnelse}</div>
+        </div>
+        <span class="pill pill-info" style="margin-left:12px;flex-shrink:0">${f.risiko || ''}</span>
+      </div>`).join('');
+    if (fond.bitcoin_dca) {
+      document.getElementById('bitcoin-dca').innerHTML = '<strong style="color:var(--ink)">Bitcoin DCA:</strong> ' + fond.bitcoin_dca;
+    }
+  } else { fondCard.style.display = 'none'; }
+
+  // Overføringsplan
+  const ovf = d.overforingsplan;
+  const ovfCard = document.getElementById('overforing-card');
+  if (ovf) {
+    ovfCard.style.display = 'block';
+    document.getElementById('overforing-stats').innerHTML = [
+      { label: 'Jobbkonto → Brukskonto', value: ovf.fra_jobbkonto_til_brukskonto, cls: 'highlight-gold' },
+      { label: 'Jobbkonto → Sparekonto', value: ovf.fra_jobbkonto_til_sparekonto, cls: 'highlight-pos' },
+      { label: 'Behold på jobbkonto', value: ovf.behold_paa_jobbkonto, cls: '' },
+    ].map(s => `<div class="stat ${s.cls}"><div class="stat-label">${s.label}</div><div class="stat-value">${s.value || '—'}</div></div>`).join('');
+    document.getElementById('overforing-begrunnelse').textContent = ovf.begrunnelse || '';
+  } else { ovfCard.style.display = 'none'; }
 
   // Prognose
   const ps = prog.status || '';
