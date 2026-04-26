@@ -611,14 +611,12 @@ let S = {
 let charts = {};
 
 // ══ Init ═══════════════════════════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', function() {
+// Script er nederst i body — DOM er allerede klar, ingen DOMContentLoaded nødvendig
+(function init() {
   try {
     document.getElementById('workerUrl').value = S.workerUrl;
     document.getElementById('agentSecret').value = S.agentSecret;
-
-    // Koble til knapp med event listener
     document.getElementById('fortsettBtn').addEventListener('click', goToUpload);
-
     if (S.dark) {
       document.documentElement.setAttribute('data-theme','dark');
       document.getElementById('darkBtn').textContent = '☀️';
@@ -628,7 +626,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.error('Init feil:', e);
     showOnly('app-setup');
   }
-});
+})();
 
 // ══ Navigation ══════════════════════════════════════════════════════════════
 function showOnly(id) {
