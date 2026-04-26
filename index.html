@@ -6,7 +6,7 @@
 <title>Sparingsagent</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
@@ -546,10 +546,18 @@ let S = {
 let charts = {};
 
 // ══ Init ═══════════════════════════════════════════════════════════════════
-document.getElementById('workerUrl').value = S.workerUrl;
-document.getElementById('agentSecret').value = S.agentSecret;
-if (S.dark) { document.documentElement.setAttribute('data-theme','dark'); document.getElementById('darkBtn').textContent='☀️'; }
-if (S.workerUrl) goToUpload(); else showOnly('app-setup');
+try {
+  document.getElementById('workerUrl').value = S.workerUrl;
+  document.getElementById('agentSecret').value = S.agentSecret;
+  if (S.dark) {
+    document.documentElement.setAttribute('data-theme','dark');
+    document.getElementById('darkBtn').textContent = '☀️';
+  }
+  if (S.workerUrl) goToUpload(); else showOnly('app-setup');
+} catch(e) {
+  console.error('Init feil:', e);
+  showOnly('app-setup');
+}
 
 // ══ Navigation ══════════════════════════════════════════════════════════════
 function showOnly(id) {
@@ -558,13 +566,20 @@ function showOnly(id) {
 }
 function goToSetup() { showOnly('app-setup'); }
 function goToUpload() {
-  const url = document.getElementById('workerUrl').value.trim();
-  const sec = document.getElementById('agentSecret').value.trim();
-  if (!url) { alert('Skriv inn Worker URL'); return; }
-  S.workerUrl = url; S.agentSecret = sec;
-  localStorage.setItem('workerUrl', url); localStorage.setItem('agentSecret', sec);
-  loadConfigToForm();
-  showOnly('app-upload');
+  try {
+    const url = (document.getElementById('workerUrl').value || '').trim();
+    const sec = (document.getElementById('agentSecret').value || '').trim();
+    if (!url) { alert('Skriv inn Worker URL'); return; }
+    S.workerUrl = url;
+    S.agentSecret = sec;
+    localStorage.setItem('workerUrl', url);
+    localStorage.setItem('agentSecret', sec);
+    try { loadConfigToForm(); } catch(e) { console.warn('Config load feil:', e); }
+    showOnly('app-upload');
+  } catch(e) {
+    console.error('goToUpload feil:', e);
+    alert('Feil: ' + e.message);
+  }
 }
 
 // ══ Dark mode ═══════════════════════════════════════════════════════════════
