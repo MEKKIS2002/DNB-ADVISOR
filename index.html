@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>Sparingsagent</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -247,7 +248,7 @@ footer{text-align:center;padding:40px 0 20px;font-size:11px;color:var(--ink-fain
           <label>Agent Secret <span style="font-weight:300;color:var(--ink-faint)">(valgfritt)</span></label>
           <input type="text" id="agentSecret" placeholder="ditt-secret">
         </div>
-        <button class="btn btn-primary" onclick="goToUpload()" style="width:100%;justify-content:center;margin-top:8px">Fortsett →</button>
+        <button id="fortsettBtn" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px">Fortsett →</button>
       </div>
     </div>
   </div>
@@ -610,18 +611,24 @@ let S = {
 let charts = {};
 
 // ══ Init ═══════════════════════════════════════════════════════════════════
-try {
-  document.getElementById('workerUrl').value = S.workerUrl;
-  document.getElementById('agentSecret').value = S.agentSecret;
-  if (S.dark) {
-    document.documentElement.setAttribute('data-theme','dark');
-    document.getElementById('darkBtn').textContent = '☀️';
+document.addEventListener('DOMContentLoaded', function() {
+  try {
+    document.getElementById('workerUrl').value = S.workerUrl;
+    document.getElementById('agentSecret').value = S.agentSecret;
+
+    // Koble til knapp med event listener
+    document.getElementById('fortsettBtn').addEventListener('click', goToUpload);
+
+    if (S.dark) {
+      document.documentElement.setAttribute('data-theme','dark');
+      document.getElementById('darkBtn').textContent = '☀️';
+    }
+    if (S.workerUrl) goToUpload(); else showOnly('app-setup');
+  } catch(e) {
+    console.error('Init feil:', e);
+    showOnly('app-setup');
   }
-  if (S.workerUrl) goToUpload(); else showOnly('app-setup');
-} catch(e) {
-  console.error('Init feil:', e);
-  showOnly('app-setup');
-}
+});
 
 // ══ Navigation ══════════════════════════════════════════════════════════════
 function showOnly(id) {
