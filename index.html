@@ -491,23 +491,86 @@ footer{text-align:center;padding:40px 0 20px;font-size:11px;color:var(--ink-fain
 
     <!-- Fond & investeringsanbefalinger -->
     <div class="card" id="fond-card" style="display:none">
-      <div class="card-title">Fondanbefalinger</div>
+      <div class="card-title">📈 Fondanbefalinger</div>
       <p class="analyse-txt" id="fond-sammendrag"></p>
       <div id="fond-list" style="margin-bottom:16px"></div>
       <div id="bitcoin-dca" style="font-size:13px;color:var(--ink-muted);border-top:1px solid var(--border-soft);padding-top:12px;line-height:1.7"></div>
     </div>
 
+    <!-- Ukentlig budsjett -->
+    <div class="card" id="ukentlig-card" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="card-title" style="margin-bottom:0">💡 Fri til å bruke denne uken</div>
+        <span id="ukentlig-pill"></span>
+      </div>
+      <div style="font-size:36px;font-family:'Cormorant Garamond',serif;font-weight:500;margin-bottom:8px" id="ukentlig-belop"></div>
+      <p style="font-size:13px;color:var(--ink-muted);line-height:1.7" id="ukentlig-beregning"></p>
+    </div>
+
     <!-- Overføringsplan -->
     <div class="card" id="overforing-card" style="display:none">
-      <div class="card-title">Anbefalt overføringsplan</div>
+      <div class="card-title">💸 Anbefalt månedlig overføringsplan</div>
       <div class="stat-grid" id="overforing-stats" style="margin-bottom:14px"></div>
       <p style="font-size:13px;color:var(--ink-muted);line-height:1.7" id="overforing-begrunnelse"></p>
+    </div>
+
+    <!-- Renteradar -->
+    <div class="card" id="rente-card" style="display:none">
+      <div class="card-title">🏦 Renteradar</div>
+      <div class="stat-grid" id="rente-stats" style="margin-bottom:14px"></div>
+      <p style="font-size:13px;color:var(--ink-muted);line-height:1.7" id="rente-anbefaling"></p>
+    </div>
+
+    <!-- Abonnements-audit -->
+    <div class="card" id="abonnement-card" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="card-title" style="margin-bottom:0">📋 Abonnements-audit</div>
+        <span id="abonnement-sparing-pill"></span>
+      </div>
+      <div class="stat-grid" id="abonnement-stats" style="margin-bottom:16px"></div>
+      <div id="abonnement-liste"></div>
+    </div>
+
+    <!-- Impulskjøp -->
+    <div class="card" id="impuls-card" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div class="card-title" style="margin-bottom:0">⚡ Impulskjøp oppdaget</div>
+        <span id="impuls-total-pill"></span>
+      </div>
+      <p style="font-size:13px;color:var(--ink-muted);margin-bottom:12px;line-height:1.6" id="impuls-kommentar"></p>
+      <ul class="exp-list" id="impuls-liste"></ul>
+    </div>
+
+    <!-- Sparemål countdown -->
+    <div class="card" id="sparemal-card">
+      <div class="card-title">🎯 Sparemål</div>
+      <div id="sparemal-content"></div>
+    </div>
+
+    <!-- Skattefradrag -->
+    <div class="card" id="skatt-fradrag-card" style="display:none">
+      <div class="card-title">🧾 Skattefradrag du kan kreve</div>
+      <div class="stat-grid" id="skatt-fradrag-stats" style="margin-bottom:14px"></div>
+      <ul id="skatt-tips" style="list-style:none"></ul>
+    </div>
+
+    <!-- Side income -->
+    <div class="card" id="side-income-card" style="display:none">
+      <div class="card-title">💼 Ideer for ekstrainntekt</div>
+      <div id="side-income-liste"></div>
+    </div>
+
+    <!-- Lønnsforhandling -->
+    <div class="card" id="lonn-card" style="display:none">
+      <div class="card-title">📊 Lønnsforhandling</div>
+      <div class="stat-grid" id="lonn-stats" style="margin-bottom:14px"></div>
+      <p style="font-size:13px;color:var(--ink-muted);line-height:1.7" id="lonn-anbefaling"></p>
     </div>
 
     <!-- Faste utgifter -->
     <div class="card" id="faste-card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <h2 style="font-size:20px;font-weight:500">Faste utgifter</h2>
+        <h2 style="font-size:20px;font-weight:500">🔁 Faste utgifter</h2>
         <span id="faste-nye"></span>
       </div>
       <p class="analyse-txt" id="faste-analyse"></p>
@@ -516,14 +579,14 @@ footer{text-align:center;padding:40px 0 20px;font-size:11px;color:var(--ink-fain
 
     <!-- Markedsdata -->
     <div class="card" id="market-card" style="display:none">
-      <div class="card-title">Markedsoversikt</div>
+      <div class="card-title">🌍 Markedsoversikt</div>
       <div class="market-box" id="market-tekst"></div>
       <p style="font-size:10px;color:var(--ink-faint);margin-top:6px">Web search — ikke finansiell rådgivning</p>
     </div>
 
     <!-- Anbefalinger -->
     <div class="card" id="anbefaling-card">
-      <div class="card-title">Prioriterte anbefalinger</div>
+      <div class="card-title">⚡ Prioriterte anbefalinger</div>
       <div id="anbefalinger-content"></div>
     </div>
   </div>
